@@ -31,14 +31,127 @@ class MplCanvas(FigureCanvasQTAgg):
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(767, 621)
+        MainWindow.resize(934, 802)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.centralwidget)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.centralwidget)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
+        self.label_2 = QtWidgets.QLabel(self.centralwidget)
+        self.label_2.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_2.setObjectName("label_2")
+        self.verticalLayout.addWidget(self.label_2)
+        self.set_interference(MainWindow)
+        self.verticalLayout.addWidget(self.interference)
+        self.label_filename = QtWidgets.QLabel(self.centralwidget)
+        self.label_filename.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_filename.setObjectName("label_filename")
+        self.verticalLayout.addWidget(self.label_filename)
+        self.openButton = QtWidgets.QPushButton(self.centralwidget)
+        self.openButton.setObjectName("openButton")
+        self.verticalLayout.addWidget(self.openButton)
+        self.horizontalLayout.addLayout(self.verticalLayout)
+        self.formLayout_2 = QtWidgets.QFormLayout()
+        self.formLayout_2.setObjectName("formLayout_2")
+        self.total_time_title = QtWidgets.QLabel(self.centralwidget)
+        self.total_time_title.setObjectName("total_time_title")
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.total_time_title)
+        self.total_time = QtWidgets.QLineEdit(self.centralwidget)
+        self.total_time.setObjectName("total_time")
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.total_time)
+        self.lambda_source_litle = QtWidgets.QLabel(self.centralwidget)
+        self.lambda_source_litle.setObjectName("lambda_source_litle")
+        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.lambda_source_litle)
+        self.lambda_source = QtWidgets.QLineEdit(self.centralwidget)
+        self.lambda_source.setObjectName("lambda_source")
+        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.lambda_source)
+        self.source_bandwith_title = QtWidgets.QLabel(self.centralwidget)
+        self.source_bandwith_title.setObjectName("source_bandwith_title")
+        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.source_bandwith_title)
+        self.source_bandwith = QtWidgets.QLineEdit(self.centralwidget)
+        self.source_bandwith.setObjectName("source_bandwith")
+        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.source_bandwith)
+        self.delta_n_title = QtWidgets.QLabel(self.centralwidget)
+        self.delta_n_title.setObjectName("delta_n_title")
+        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.delta_n_title)
+        self.delta_n = QtWidgets.QLineEdit(self.centralwidget)
+        self.delta_n.setObjectName("delta_n")
+        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.delta_n)
+        self.k_disp_titile = QtWidgets.QLabel(self.centralwidget)
+        self.k_disp_titile.setObjectName("k_disp_titile")
+        self.formLayout_2.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.k_disp_titile)
+        self.k_disp = QtWidgets.QLCDNumber(self.centralwidget)
+        self.k_disp.setObjectName("k_disp")
+        self.formLayout_2.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.k_disp)
+        self.k_ekst_titile = QtWidgets.QLabel(self.centralwidget)
+        self.k_ekst_titile.setObjectName("k_ekst_titile")
+        self.formLayout_2.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.k_ekst_titile)
+        self.k_ekst = QtWidgets.QLCDNumber(self.centralwidget)
+        self.k_ekst.setObjectName("k_ekst")
+        self.formLayout_2.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.k_ekst)
+        self.per_titile = QtWidgets.QLabel(self.centralwidget)
+        self.per_titile.setObjectName("per_titile")
+        self.formLayout_2.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.per_titile)
+        self.per_title = QtWidgets.QLCDNumber(self.centralwidget)
+        self.per_title.setObjectName("per_title")
+        self.formLayout_2.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.per_title)
+        self.horizontalLayout.addLayout(self.formLayout_2)
+        self.verticalLayout_3.addLayout(self.horizontalLayout)
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.label_3 = QtWidgets.QLabel(self.centralwidget)
+        self.label_3.setAlignment(QtCore.Qt.AlignCenter)
+        self.label_3.setObjectName("label_3")
+        self.verticalLayout_2.addWidget(self.label_3)
+        self.visibility = QtWidgets.QGraphicsView(self.centralwidget)
+        self.visibility.setObjectName("visibility")
+        self.verticalLayout_2.addWidget(self.visibility)
+        self.verticalLayout_3.addLayout(self.verticalLayout_2)
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
 
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+        self.set_defaults()
+
+        self.add_functions()
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", " Анализатор"))
+        self.label_2.setText(_translate("MainWindow", "Интерференционная картина"))
+        self.label_filename.setText(_translate("MainWindow", "Имя файла"))
+        self.openButton.setText(_translate("MainWindow", "Открыть файл"))
+        self.total_time_title.setText(_translate("MainWindow", "Время ввода в cекундах"))
+        self.lambda_source_litle.setText(_translate("MainWindow", "Центральная длина волны источника в нанометрах"))
+        self.source_bandwith_title.setText(_translate("MainWindow", "Ширина полосы источника в нанометрах"))
+        self.delta_n_title.setText(_translate("MainWindow", "Разница эффективных показателей преломления волокна"))
+        self.k_disp_titile.setText(_translate("MainWindow", "Коэффициент дисперсии"))
+        self.k_ekst_titile.setText(_translate("MainWindow", "Коэффициент экстринкции"))
+        self.per_titile.setText(_translate("MainWindow", "PER"))
+        self.label_3.setText(_translate("MainWindow", "Картина видности"))
+
+
+    def set_defaults(self):
+        self.total_time.setText('30')
+    def add_functions(self):
+
+        self.openButton.clicked.connect(self.open_file)
+
+        self.total_time.mousePressEvent = lambda _: self.total_time.selectAll()
+        self.lambda_source.mousePressEvent = lambda _: self.lambda_source.selectAll()
+        self.source_bandwith.mousePressEvent = lambda _: self.source_bandwith.selectAll()
+        self.delta_n.mousePressEvent = lambda _: self.delta_n.selectAll()
+
+
+
+    def set_interference(self, MainWindow):
         self.sc = MplCanvas(self, width=5, height=4, dpi=100)
         self.sc.axes.plot()
 
@@ -50,42 +163,20 @@ class Ui_MainWindow(object):
         self.layout.addWidget(self.sc)
 
         # Create a placeholder widget to hold our toolbar and canvas.
-        self.graphWidget = QtWidgets.QWidget()
-        self.graphWidget.setLayout(self.layout)
-
-        MainWindow.setCentralWidget(self.graphWidget)
-        self.verticalLayout.addWidget(self.graphWidget)
-        self.openButton = QtWidgets.QPushButton(self.centralwidget)
-        self.openButton.setObjectName("openButton")
-        self.verticalLayout.addWidget(self.openButton)
-        self.verticalLayout_2.addLayout(self.verticalLayout)
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
-
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-        self.add_functions()
-
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", " Анализатор"))
-        self.openButton.setText(_translate("MainWindow", "Открыть файл"))
-
-    def add_functions(self):
-        self.openButton.clicked.connect(self.open_file)
+        self.interference = QtWidgets.QWidget()
+        self.interference.setLayout(self.layout)
 
     def open_file(self):
         self.filemane, _ = QFileDialog.getOpenFileName()
-        print(self.filemane)
+        self.label_filename.setText(self.filemane)
         self.drow_graph(self.filemane)
 
     def drow_graph(self, filemane):
         x = np.fromfile(filemane)
         self.sc.axes.cla()
-        self.sc.axes.plot(np.arange(0, np.size(x), 1, dtype=float), x)
+        self.sc.axes.plot(np.arange(0, np.size(x), 1, dtype=float), x, linewidth = 0.5)
+        self.sc.axes.set_xlabel('Длина волокна, мм')
+        self.sc.axes.set_ylabel('Сигнал на фотоприемнике, условные единицы')
         self.sc.draw()
 
 

@@ -6,26 +6,141 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>767</width>
-    <height>621</height>
+    <width>934</width>
+    <height>802</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string> Анализатор</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_2">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QGraphicsView" name="graphicsView"/>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Интерференционная картина</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGraphicsView" name="interference"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_filename">
+          <property name="text">
+           <string>Имя файла</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="openButton">
+          <property name="text">
+           <string>Открыть файл</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QPushButton" name="openButton">
+       <layout class="QFormLayout" name="formLayout_2">
+        <item row="0" column="0">
+         <widget class="QLabel" name="total_time_title">
+          <property name="text">
+           <string>Время ввода в cекундах</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="total_time"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="lambda_source_litle">
+          <property name="text">
+           <string>Центральная длина волны источника в нанометрах</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="lambda_source"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="source_bandwith_title">
+          <property name="text">
+           <string>Ширина полосы источника в нанометрах</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLineEdit" name="source_bandwith"/>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="delta_n_title">
+          <property name="text">
+           <string>Разница эффективных показателей преломления волокна</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLineEdit" name="delta_n"/>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="k_disp_titile">
+          <property name="text">
+           <string>Коэффициент дисперсии</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QLCDNumber" name="k_disp"/>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="k_ekst_titile">
+          <property name="text">
+           <string>Коэффициент экстринкции</string>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QLCDNumber" name="k_ekst"/>
+        </item>
+        <item row="6" column="0">
+         <widget class="QLabel" name="per_titile">
+          <property name="text">
+           <string>PER</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QLCDNumber" name="per_title"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>PushButton</string>
+         <string>Картина видности</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
         </property>
        </widget>
+      </item>
+      <item>
+       <widget class="QGraphicsView" name="visibility"/>
       </item>
      </layout>
     </item>
