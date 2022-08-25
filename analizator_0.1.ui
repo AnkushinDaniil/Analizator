@@ -56,7 +56,7 @@
         <item row="0" column="0">
          <widget class="QLabel" name="total_time_title">
           <property name="text">
-           <string>Время ввода в cекундах</string>
+           <string>Время ввода [сек]</string>
           </property>
          </widget>
         </item>
@@ -64,64 +64,81 @@
          <widget class="QLineEdit" name="total_time"/>
         </item>
         <item row="1" column="0">
-         <widget class="QLabel" name="lambda_source_litle">
+         <widget class="QLabel" name="speed_title">
           <property name="text">
-           <string>Центральная длина волны источника в нанометрах</string>
+           <string>Скорость [м/сек]</string>
           </property>
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLineEdit" name="lambda_source"/>
+         <widget class="QLineEdit" name="speed"/>
         </item>
         <item row="2" column="0">
-         <widget class="QLabel" name="source_bandwith_title">
+         <widget class="QLabel" name="lambda_source_title">
           <property name="text">
-           <string>Ширина полосы источника в нанометрах</string>
+           <string>Центральная длина волны источника [м]</string>
           </property>
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QLineEdit" name="source_bandwith"/>
+         <widget class="QLineEdit" name="lambda_source"/>
         </item>
         <item row="3" column="0">
+         <widget class="QLabel" name="source_bandwith_title">
+          <property name="text">
+           <string>Ширина полосы источника в нанометрах [м]</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QLineEdit" name="source_bandwith"/>
+        </item>
+        <item row="4" column="0">
          <widget class="QLabel" name="delta_n_title">
           <property name="text">
            <string>Разница эффективных показателей преломления волокна</string>
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
+        <item row="4" column="1">
          <widget class="QLineEdit" name="delta_n"/>
         </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="k_disp_titile">
+        <item row="5" column="0">
+         <widget class="QLabel" name="k_disp_title">
           <property name="text">
            <string>Коэффициент дисперсии</string>
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
+        <item row="5" column="1">
          <widget class="QLCDNumber" name="k_disp"/>
         </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="k_ekst_titile">
+        <item row="6" column="0">
+         <widget class="QLabel" name="k_ekst_title">
           <property name="text">
            <string>Коэффициент экстринкции</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
+        <item row="6" column="1">
          <widget class="QLCDNumber" name="k_ekst"/>
         </item>
-        <item row="6" column="0">
-         <widget class="QLabel" name="per_titile">
+        <item row="7" column="0">
+         <widget class="QLabel" name="per_title_2">
           <property name="text">
            <string>PER</string>
           </property>
          </widget>
         </item>
-        <item row="6" column="1">
+        <item row="7" column="1">
          <widget class="QLCDNumber" name="per_title"/>
+        </item>
+        <item row="8" column="1">
+         <widget class="QPushButton" name="calculateButton">
+          <property name="text">
+           <string>Вычислить</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
