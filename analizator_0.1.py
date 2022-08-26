@@ -21,10 +21,10 @@ from matplotlib.figure import Figure
 
 class MplCanvas(FigureCanvasQTAgg):
 
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-        super(MplCanvas, self).__init__(fig)
+    def __init__(self):
+        self.fig = Figure()
+        self.axes = self.fig.add_subplot(111)
+        super(MplCanvas, self).__init__(self.fig)
 
 class Ui_MainWindow(object):
     def setup_ui(self, MainWindow):
@@ -167,7 +167,7 @@ class Ui_MainWindow(object):
     class Chart:
 
         def __init__(self, MainWindow):
-            self.sc = MplCanvas(self, width=5, height=4, dpi=100)
+            self.sc = MplCanvas()
             self.sc.axes.plot()
 
             # Create toolbar, passing canvas as first parament, parent (self, the MainWindow) as second.
@@ -186,21 +186,32 @@ class Ui_MainWindow(object):
         self.label_filename.setText(self.__filemane)
         float_parameters = self.str2float(self.total_time.text(), self.speed.text(), self.lambda_source.text(),
                                           self.source_bandwith.text(), self.delta_n.text())
-        if len(float_parameters) == 5:
-            self.signal = self.Signal(np.fromfile(self.__filemane), *float_parameters)
-            self.draw_interference()
-        else:
-            self.error()
+        if isinstance(float_parameters, list) & (self.__filemane != ''):
+            if len(float_parameters) == 5:
+                self.signal = self.Signal(np.fromfile(self.__filemane), *float_parameters)
+                self.draw_interference()
+            else:
+                self.show_error()
 
     def draw_interference(self):
         self.interference.sc.axes.cla()
         self.interference.sc.axes.plot(self.signal.get_signal()[0], self.signal.get_signal()[1], linewidth=0.5)
         self.interference.sc.axes.set_xlabel('Длина волокна, м')
         self.interference.sc.axes.set_ylabel('Сигнал на фотоприемнике, условные единицы')
+        self.interference.sc.fig.tight_layout()
         self.interference.sc.draw()
 
+    def drow_visibility(self, visibility_data):
+        self.visibility.sc.axes.cla()
+        self.visibility.sc.axes.plot(visibility_data[0], visibility_data[1], linewidth=0.5)
+        self.visibility.sc.axes.set_xlabel('Длина волокна, м')
+        self.visibility.sc.axes.set_ylabel('Видность, условные единицы')
+        self.visibility.sc.fig.tight_layout()
+        self.visibility.sc.draw()
+
     def calculate(self):
-        pass
+        self.__visibility = self.signal.get_visibility()
+        self.drow_visibility(self.__visibility)
 
     def str2float(self, *args):
         try:
@@ -219,6 +230,8 @@ class Ui_MainWindow(object):
         error.setIcon(QMessageBox.Warning)
         error.setStandardButtons(QMessageBox.Ok|QMessageBox.Cancel)
 
+        error.exec_()
+
     class Signal:
 
         def __init__(self, signal, speed, total_time, lambda_source, source_bandwith, delta_n):
@@ -230,12 +243,26 @@ class Ui_MainWindow(object):
                 self.n_to_length = total_time*speed/n
                 coordinates = np.arange(0, n, 1, dtype=float) * self.n_to_length
                 self.__signal = (coordinates, signal)
+                self.__signal = self.__set_0(self.__signal)
 
         @staticmethod
         def __check_signal(signal, speed, total_time, lambda_source, source_bandwith, delta_n):
             return all((isinstance(signal, np.ndarray), isinstance(speed, float),
                         isinstance(total_time, float), isinstance(lambda_source, float),
                         isinstance(source_bandwith, float), isinstance(delta_n, float)))
+
+        @staticmethod
+        def __set_0(signal):
+            from scipy.signal import find_peaks
+
+            x = signal[0]
+            y = signal[1]
+            peaks, _ = find_peaks(y)
+            i = np.where(y == np.sort(y[peaks])[~0])
+
+            x = x - x[i]
+
+            return x, y
 
         def get_signal(self):
             return self.__signal
@@ -244,12 +271,14 @@ class Ui_MainWindow(object):
             self.__denoised_signal = self.__remove_noise(self.__signal)
             self.__periodicity_of_the_interference_pattern =\
                 self.__calculate_interference_pattern_periodicity(self.__denoised_signal[1])
-            return self.__calculate_visibility(self.__denoised_signal, self.__periodicity_of_the_interference_pattern)
+            self.__visibility = self.__calculate_visibility(self.__denoised_signal, self.__periodicity_of_the_interference_pattern)
+            self.__visibility = self.__set_0(self.__visibility)
+            return self.__visibility
 
         @staticmethod
         def __remove_noise(signal):
             from scipy.signal import find_peaks
-            span = int(signal[1].shape[0] / len(find_peaks(signal)[0]))
+            span = int(signal[1].shape[0] / len(find_peaks(signal[1])[0]))
             denoised_signal = np.convolve(signal[1], np.ones(span * 2 + 1) / (span * 2 + 1), mode="same")[span:~span]
             new_coordinates = signal[0][span:~span]
             return new_coordinates, denoised_signal
@@ -262,10 +291,10 @@ class Ui_MainWindow(object):
             return int(top_values.shape[0] / peaks.shape[0] * 10)
 
         def __calculate_visibility(self, denoised_signal, span):
-            splited_denoised_signal = np.array_split(denoised_signal[1], denoised_signal.shape[0] // span)
-            ma = (np.max(i) for i in splited_denoised_signal)
-            mi = (np.min(i) for i in splited_denoised_signal)
-            visibility = (ma - mi) / (ma + mi)
+            splited_denoised_signal = np.array_split(denoised_signal[1], denoised_signal[1].shape[0] // span)
+            maximum = (np.max(i) for i in splited_denoised_signal)
+            minimum = (np.min(i) for i in splited_denoised_signal)
+            visibility = np.fromiter(((ma - mi) / (ma + mi) for ma, mi in zip(maximum, minimum)), float)
             visibility_coordinate = np.linspace(np.min(denoised_signal[0]), np.max(denoised_signal[0]),
                                                 num=visibility.shape[0])
             return visibility_coordinate, visibility
