@@ -16,9 +16,9 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_3">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
          <widget class="QLabel" name="label_2">
           <property name="text">
@@ -30,24 +30,32 @@
          </widget>
         </item>
         <item>
-         <widget class="QGraphicsView" name="interference"/>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_filename">
-          <property name="text">
-           <string>Имя файла</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="openButton">
-          <property name="text">
-           <string>Открыть файл</string>
-          </property>
-         </widget>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <item>
+           <widget class="QGraphicsView" name="interference"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout">
+            <item>
+             <widget class="QLabel" name="label_filename">
+              <property name="text">
+               <string>Имя файла</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="openButton">
+              <property name="text">
+               <string>Открыть файл</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>
@@ -56,7 +64,7 @@
         <item row="0" column="0">
          <widget class="QLabel" name="total_time_title">
           <property name="text">
-           <string>Время ввода [сек]</string>
+           <string>Время ввода [с]</string>
           </property>
          </widget>
         </item>
@@ -66,7 +74,7 @@
         <item row="1" column="0">
          <widget class="QLabel" name="speed_title">
           <property name="text">
-           <string>Скорость [м/сек]</string>
+           <string>Скорость [мм/сек]</string>
           </property>
          </widget>
         </item>
@@ -76,7 +84,7 @@
         <item row="2" column="0">
          <widget class="QLabel" name="lambda_source_title">
           <property name="text">
-           <string>Центральная длина волны источника [м]</string>
+           <string>Центральная длина волны источника [нм]</string>
           </property>
          </widget>
         </item>
@@ -86,7 +94,7 @@
         <item row="3" column="0">
          <widget class="QLabel" name="source_bandwith_title">
           <property name="text">
-           <string>Ширина полосы источника в нанометрах [м]</string>
+           <string>Ширина полосы источника в нанометрах [нм]</string>
           </property>
          </widget>
         </item>
@@ -123,17 +131,7 @@
         <item row="6" column="1">
          <widget class="QLCDNumber" name="k_ekst"/>
         </item>
-        <item row="7" column="0">
-         <widget class="QLabel" name="per_title_2">
-          <property name="text">
-           <string>PER</string>
-          </property>
-         </widget>
-        </item>
         <item row="7" column="1">
-         <widget class="QLCDNumber" name="per_title"/>
-        </item>
-        <item row="8" column="1">
          <widget class="QPushButton" name="calculateButton">
           <property name="text">
            <string>Вычислить</string>
@@ -145,28 +143,31 @@
      </layout>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <widget class="QLabel" name="label_3">
-        <property name="text">
-         <string>Картина видности</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QGraphicsView" name="visibility"/>
-      </item>
-      <item>
-       <widget class="QProgressBar" name="progressBar">
-        <property name="value">
-         <number>24</number>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="Line" name="line_2">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="label_3">
+      <property name="text">
+       <string>Картина видности</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGraphicsView" name="visibility"/>
+    </item>
+    <item>
+     <widget class="Line" name="line">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
