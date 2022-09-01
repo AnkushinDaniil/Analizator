@@ -1,7 +1,4 @@
-# ------------------------------------------------------
-# -------------------- mplwidget.py --------------------
-# ------------------------------------------------------
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 

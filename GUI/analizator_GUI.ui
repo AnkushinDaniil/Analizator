@@ -7,60 +7,27 @@
     <x>0</x>
     <y>0</y>
     <width>934</width>
-    <height>802</height>
+    <height>612</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string> Анализатор</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_3">
+   <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <item>
-         <widget class="QLabel" name="label_2">
-          <property name="text">
-           <string>Интерференционная картина</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="MplWidget" name="interferenceWidget" native="true"/>
-        </item>
-        <item>
-         <layout class="QVBoxLayout" name="verticalLayout">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item>
-             <widget class="QLabel" name="label_filename">
-              <property name="text">
-               <string>Имя файла</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="openButton">
-              <property name="text">
-               <string>Открыть файл</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </item>
-       </layout>
-      </item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <property name="sizeConstraint">
+       <enum>QLayout::SetMinimumSize</enum>
+      </property>
       <item>
        <layout class="QFormLayout" name="formLayout_2">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMinimumSize</enum>
+        </property>
+        <property name="labelAlignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
         <item row="0" column="0">
          <widget class="QLabel" name="total_time_title">
           <property name="text">
@@ -69,7 +36,14 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="QLineEdit" name="total_time"/>
+         <widget class="QLineEdit" name="total_time">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
         </item>
         <item row="1" column="0">
          <widget class="QLabel" name="speed_title">
@@ -79,7 +53,14 @@
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QLineEdit" name="speed"/>
+         <widget class="QLineEdit" name="speed">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
         </item>
         <item row="2" column="0">
          <widget class="QLabel" name="lambda_source_title">
@@ -89,7 +70,14 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QLineEdit" name="lambda_source"/>
+         <widget class="QLineEdit" name="lambda_source">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
         </item>
         <item row="3" column="0">
          <widget class="QLabel" name="source_bandwith_title">
@@ -99,7 +87,14 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="QLineEdit" name="source_bandwith"/>
+         <widget class="QLineEdit" name="source_bandwith">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
         </item>
         <item row="4" column="0">
          <widget class="QLabel" name="delta_n_title">
@@ -109,32 +104,96 @@
          </widget>
         </item>
         <item row="4" column="1">
-         <widget class="QLineEdit" name="delta_n"/>
+         <widget class="QLineEdit" name="delta_n">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
         </item>
-        <item row="5" column="0">
+       </layout>
+      </item>
+      <item>
+       <layout class="QFormLayout" name="formLayout">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetMinimumSize</enum>
+        </property>
+        <property name="fieldGrowthPolicy">
+         <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+        </property>
+        <property name="rowWrapPolicy">
+         <enum>QFormLayout::DontWrapRows</enum>
+        </property>
+        <property name="labelAlignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <property name="formAlignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <property name="verticalSpacing">
+         <number>6</number>
+        </property>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="openButton">
+          <property name="text">
+           <string>Открыть файл</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
          <widget class="QLabel" name="k_disp_title">
           <property name="text">
            <string>Коэффициент дисперсии двулучепреломления</string>
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
-         <widget class="QLCDNumber" name="k_disp"/>
+        <item row="1" column="1">
+         <widget class="QLCDNumber" name="k_disp">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
         </item>
-        <item row="6" column="0">
+        <item row="2" column="0">
          <widget class="QLabel" name="k_ekst_title">
           <property name="text">
            <string>Коэффициент экстринкции</string>
           </property>
          </widget>
         </item>
-        <item row="6" column="1">
-         <widget class="QLCDNumber" name="k_ekst"/>
+        <item row="2" column="1">
+         <widget class="QLCDNumber" name="k_ekst">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>20</height>
+           </size>
+          </property>
+         </widget>
         </item>
-        <item row="7" column="1">
+        <item row="3" column="1">
          <widget class="QPushButton" name="calculateButton">
           <property name="text">
            <string>Вычислить</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QPushButton" name="interferenceButton">
+          <property name="text">
+           <string>Показать интерференционную картину</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_filename">
+          <property name="text">
+           <string>Директория</string>
           </property>
          </widget>
         </item>
@@ -143,7 +202,7 @@
      </layout>
     </item>
     <item>
-     <widget class="Line" name="line_2">
+     <widget class="Line" name="line">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
@@ -151,6 +210,18 @@
     </item>
     <item>
      <widget class="QLabel" name="label_3">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16</height>
+       </size>
+      </property>
       <property name="text">
        <string>Картина видности</string>
       </property>
@@ -160,13 +231,26 @@
      </widget>
     </item>
     <item>
-     <widget class="MplWidget" name="visibilityWidget" native="true"/>
-    </item>
-    <item>
-     <widget class="Line" name="line">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
+     <widget class="PlotlyWidget" name="visibilityWidget" native="true">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+        <horstretch>10</horstretch>
+        <verstretch>10</verstretch>
+       </sizepolicy>
       </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_4"/>
      </widget>
     </item>
    </layout>
@@ -175,9 +259,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>MplWidget</class>
+   <class>PlotlyWidget</class>
    <extends>QWidget</extends>
-   <header location="global">mplwidget.h</header>
+   <header location="global">plotlywidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
