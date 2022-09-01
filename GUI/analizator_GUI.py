@@ -29,6 +29,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addWidget(self.label_2)
         self.interferenceWidget = MplWidget(self.centralwidget)
         self.interferenceWidget.setObjectName("interferenceWidget")
+        self.interferenceWidget.canvas.figure.legend()
         self.verticalLayout_2.addWidget(self.interferenceWidget)
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")

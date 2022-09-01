@@ -3,7 +3,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import numpy as np
 import sys
-import pyqtgraph as pg
 
 import Data.Signal
 
@@ -33,7 +32,7 @@ class Ui(QMainWindow):
 
     def add_functions(self):
         self.openButton.clicked.connect(self.open_file)
-        # self.calculateButton.clicked.connect(self.calculate)
+        self.calculateButton.clicked.connect(self.calculate)
 
         self.total_time.mousePressEvent = lambda _: self.total_time.selectAll()
         self.speed.mousePressEvent = lambda _: self.speed.selectAll()
@@ -42,15 +41,14 @@ class Ui(QMainWindow):
         self.delta_n.mousePressEvent = lambda _: self.delta_n.selectAll()
 
     def open_file(self):
-        self.__filemane, _ = QFileDialog.getOpenFileName()
-        self.label_filename.setText(self.__filemane)
+        self.__filenames, _ = QFileDialog.getOpenFileNames()
+        self.label_filename.setText('/'.join(self.__filenames[0].split('/')[:-1]))
         float_parameters = self.str2float(self.total_time.text(), self.speed.text(), self.lambda_source.text(),
                                           self.source_bandwith.text(), self.delta_n.text())
-        if isinstance(float_parameters, list) & (self.__filemane != ''):
+        if isinstance(float_parameters, list) & (self.__filenames != []):
             if len(float_parameters) == 5:
-
-                self.signal = Data.Signal.Signal(np.fromfile(self.__filemane), *float_parameters)
-                self.draw_interference(*self.signal.get_interference())
+                self.signal = [Data.Signal.Signal(np.fromfile(i), *float_parameters, name=i.split('/')[-1]) for i in self.__filenames]
+                self.draw_graph(self.interferenceWidget, 'linear', *[i.get_interference() for i in self.signal])
             else:
                 self.show_error()
 
@@ -72,12 +70,29 @@ class Ui(QMainWindow):
         error.setIcon(QMessageBox.Warning)
         error.setStandardButtons(QMessageBox.Ok|QMessageBox.Cancel)
 
-    def draw_interference(self, x, y):
-        # self.interferenceWidget.canvas.axes.cla()
-        self.interferenceWidget.canvas.axes.plot(x, y, linewidth=0.5)
-        # self.interferenceWidget.canvas.axes.set_yscale('log')
-        self.interferenceWidget.canvas.figure.tight_layout()
-        self.interferenceWidget.canvas.draw()
+    def draw_graph(self, widget, scale='linear', *args):
+        widget.canvas.axes.cla()
+        [widget.canvas.axes.plot(x, y, linewidth=0.5, label=name) for x, y, name in args]
+        widget.canvas.figure.legend()
+        widget.canvas.axes.set_yscale(scale)
+        widget.canvas.figure.tight_layout()
+        widget.canvas.draw()
+
+
+    def calculate(self):
+        self.__visibility = [i.get_visibility() for i in self.signal]
+        self.draw_graph(self.visibilityWidget, 'log', *self.__visibility)
+
+    @staticmethod
+    def show_error():
+        from PyQt5.QtWidgets import QMessageBox
+        error = QMessageBox()
+        error.setWindowTitle('Ошибка')
+        error.setText('Неверно введены параметры')
+        error.setIcon(QMessageBox.Warning)
+        error.setStandardButtons(QMessageBox.Ok|QMessageBox.Cancel)
+
+        error.exec_()
 
 
 def main():
