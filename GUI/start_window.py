@@ -4,6 +4,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 import sys
+import os
 
 import Data.Signal
 
@@ -110,6 +111,8 @@ def main():
     app = QApplication(sys.argv)
     window = Ui()
     app.exec_()
+    if os.path.isfile('temp.html'):
+        os.remove('temp.html')
 
 if __name__ == '__main__':
     main()

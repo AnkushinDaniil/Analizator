@@ -3,11 +3,7 @@ QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
 app = QtWidgets.QApplication([''])
 from PyQt5 import QtWebEngineWidgets
 import plotly.graph_objects as go
-import chart_studio.plotly.plotly as py
-import plotly.io as pio
-from qtplotly import PlotlyApplication
-plotly_app = PlotlyApplication()
-
+import os
 
 class PlotlyWidget(QtWidgets.QWidget):
 
@@ -25,10 +21,12 @@ class PlotlyWidget(QtWidgets.QWidget):
 
 
     def show_graph(self):
-        # df = px.data.tips()
-        # fig = px.box(df, x="day", y="total_bill", color="smoker")
         self.fig.update_traces()
-        # url = py.iplot(self.fig, filename='123')
-        self.browser.load(plotly_app.create_url(name))
-        self.browser.setHtml(self.fig.to_html(include_plotlyjs='cdn'))
+        self.fig.write_html('temp.html',
+                            full_html=False,
+                            include_plotlyjs='cdn')
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        url = QtCore.QUrl.fromLocalFile(dir_path + '/' + 'temp.html')
+        self.browser.load(url)
+        # self.browser.setHtml('temp.html')
 
