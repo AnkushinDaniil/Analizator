@@ -74,21 +74,26 @@ class Ui(QMainWindow):
         error.setStandardButtons(QMessageBox.Ok|QMessageBox.Cancel)
 
     def draw_graph(self, widget, scale='linear', *args):
-        data = [go.Scattergl(x=x, y=y, name=name) for x, y, name in args]
         widget.fig = make_subplots(specs=[[{"secondary_y": True}]])
-        [widget.fig.add_trace(i) for i in data]
+        for x, y, name in args:
+            widget.fig.add_trace(go.Scatter(x=x, y=y,
+                                            mode='lines',
+                                            name=name,
+                                            line=dict(width=0.5)
+                                            ))
         widget.fig.update_yaxes(type=scale)
         widget.fig.update_xaxes(title_text="Длина плеча интерферометра, м")
         widget.fig.update_yaxes(title_text="h-parameter", secondary_y=False)
         widget.fig.update_yaxes(title_text="PER", secondary_y=True)
-        # widget.fig.show()
+        widget.fig.update_layout(
+            xaxis=dict(
+                rangeslider=dict(
+                    visible=True
+                )
+            )
+        )
+
         widget.show_graph()
-        # widget.canvas.axes.cla()
-        # [widget.canvas.axes.plot(x, y, linewidth=0.5, label=name) for x, y, name in args]
-        # widget.canvas.figure.legend()
-        # widget.canvas.axes.set_yscale(scale)
-        # widget.canvas.figure.tight_layout()
-        # widget.canvas.draw()
 
 
     def calculate(self):

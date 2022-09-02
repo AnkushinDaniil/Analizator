@@ -15,7 +15,7 @@ class PlotlyWidget(QtWidgets.QWidget):
         vertical_layout = QtWidgets.QVBoxLayout()
         vertical_layout.addWidget(self.browser)
 
-        self.fig = go.Figure()
+        self.fig = go.FigureWidget()
 
         self.setLayout(vertical_layout)
 
