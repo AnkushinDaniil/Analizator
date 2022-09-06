@@ -5,7 +5,10 @@ from plotly.subplots import make_subplots
 import numpy as np
 import sys
 import os
-
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import threading
 import Data.Signal
 
 
@@ -81,18 +84,8 @@ class Ui(QMainWindow):
                                             name=name,
                                             line=dict(width=0.5)
                                             ))
-        widget.fig.update_yaxes(type=scale)
-        widget.fig.update_xaxes(title_text="Длина плеча интерферометра, м")
-        widget.fig.update_yaxes(title_text="h-parameter", secondary_y=False)
-        widget.fig.update_yaxes(title_text="PER", secondary_y=True)
-        widget.fig.update_layout(
-            xaxis=dict(
-                rangeslider=dict(
-                    visible=True
-                )
-            )
-        )
 
+        print(widget.fig)
         widget.show_graph()
 
 
@@ -111,13 +104,21 @@ class Ui(QMainWindow):
 
         error.exec_()
 
+def run_dash(fig):
 
+    app = dash.Dash()
+    app.layout = html.Div([
+        dcc.Graph(figure=fig)
+    ])
+
+    app.run_server(debug=True, use_reloader=False)
 def main():
+
     app = QApplication(sys.argv)
     window = Ui()
+    print(window.visibilityWidget.fig)
+    threading.Thread(target=run_dash, args=(window.visibilityWidget.fig,), daemon=True).start()
     app.exec_()
-    if os.path.isfile('temp.html'):
-        os.remove('temp.html')
 
 if __name__ == '__main__':
     main()
