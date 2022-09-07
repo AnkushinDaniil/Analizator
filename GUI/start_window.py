@@ -6,35 +6,27 @@ import numpy as np
 import sys
 import os
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import Dash, dcc, html, Input, Output
 import threading
 import Data.Signal
 
 
 class Ui(QMainWindow):
     def __init__(self):
-        super(Ui, self).__init__() # Call the inherited classes __init__ method
-        uic.loadUi('analizator_GUI.ui', self) # Load the .ui file
-        self.show() # Show the GUI
+        super(Ui, self).__init__()  # Call the inherited classes __init__ method
+        uic.loadUi('analizator_GUI.ui', self)  # Load the .ui file
+        self.show()  # Show the GUI
         self.set_defaults()
         self.add_functions()
+        self.signal = []
 
     def set_defaults(self):
         self.visibilityWidget.show_graph()
-        # self.interferenceWidget.canvas.axes.set_ylabel('Сигнал на фотоприемнике, В')
-        # self.interferenceWidget.canvas.axes.set_xlabel('Длина плеча интерферометра, м')
-        # self.interferenceWidget.canvas.figure.tight_layout()
-        # self.visibilityWidget.canvas.axes.set_ylabel('Видность,отн. ед.')
-        # self.visibilityWidget.canvas.axes.set_xlabel('Длина плеча интерферометра, м')
-        # self.visibilityWidget.canvas.figure.tight_layout()
         self.total_time.setText('30')
         self.speed.setText('1')
         self.lambda_source.setText('1560')
         self.source_bandwith.setText('45')
         self.delta_n.setText('6.086e-04')
-
-
 
     def add_functions(self):
         self.openButton.clicked.connect(self.open_file)
@@ -48,12 +40,15 @@ class Ui(QMainWindow):
 
     def open_file(self):
         self.__filenames, _ = QFileDialog.getOpenFileNames()
-        self.label_filename.setText('/'.join(self.__filenames[0].split('/')[:-1])) if self.__filenames else self.label_filename.setText('Директория')
+        self.label_filename.setText(
+            '/'.join(self.__filenames[0].split('/')[:-1])) if self.__filenames else self.label_filename.setText(
+            'Директория')
         float_parameters = self.str2float(self.total_time.text(), self.speed.text(), self.lambda_source.text(),
                                           self.source_bandwith.text(), self.delta_n.text())
         if isinstance(float_parameters, list) & (self.__filenames != []):
             if len(float_parameters) == 5:
-                self.signal = [Data.Signal.Signal(np.fromfile(i), *float_parameters, name=i.split('/')[-1]) for i in self.__filenames]
+                self.signal = [Data.Signal.Signal(np.fromfile(i), *float_parameters, name=i.split('/')[-1]) for i in
+                               self.__filenames]
                 # self.draw_graph(self.interferenceWidget, 'linear', *[i.get_interference() for i in self.signal])
             else:
                 self.show_error()
@@ -74,7 +69,7 @@ class Ui(QMainWindow):
         error.setWindowTitle('Ошибка')
         error.setText('Неверно введены параметры')
         error.setIcon(QMessageBox.Warning)
-        error.setStandardButtons(QMessageBox.Ok|QMessageBox.Cancel)
+        error.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
     def draw_graph(self, widget, scale='linear', *args):
         widget.fig = make_subplots(specs=[[{"secondary_y": True}]])
@@ -85,9 +80,7 @@ class Ui(QMainWindow):
                                             line=dict(width=0.5)
                                             ))
 
-        print(widget.fig)
         widget.show_graph()
-
 
     def calculate(self):
         self.__visibility = [i.get_visibility() for i in self.signal]
@@ -100,25 +93,157 @@ class Ui(QMainWindow):
         error.setWindowTitle('Ошибка')
         error.setText('Неверно введены параметры')
         error.setIcon(QMessageBox.Warning)
-        error.setStandardButtons(QMessageBox.Ok|QMessageBox.Cancel)
+        error.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
 
         error.exec_()
 
-def run_dash(fig):
 
-    app = dash.Dash()
+def run_dash(window):
+    app = Dash()
+    style_input = {'width': '100%'}
+    style_div_input = {'marginBottom': '1.5em'}
+
     app.layout = html.Div([
-        dcc.Graph(figure=fig)
+        dcc.Graph(
+            id="chart",
+            config={"displaylogo": False},
+            figure=window.visibilityWidget.fig,
+            style={'width': '89%', 'height': '90vh', 'display': 'inline-block'}
+        ),
+
+        html.Div([
+            html.Div(
+                [
+                    html.Div(
+                        children='Время ввода [с]',
+                        style=style_input
+                    ),
+                    dcc.Input(
+                        id='total_time',
+                        placeholder='Enter a value...',
+                        type='number',
+                        value='1',
+                        style=style_input
+                    )
+                ],
+                style=style_div_input
+            ),
+
+            html.Div(
+                [
+                    html.Div(
+                        children='Скорость [мм/c]',
+                        style=style_input
+                    ),
+                    dcc.Input(
+                        id='speed',
+                        placeholder='Enter a value...',
+                        type='number',
+                        value='30',
+                        style=style_input
+                    )
+                ],
+                style=style_div_input
+            ),
+
+            html.Div(
+                [
+                    html.Div(
+                        children='Центральная длина волны источника [нм]',
+                        style=style_input
+                    ),
+                    dcc.Input(
+                        id='lambda_source',
+                        placeholder='Enter a value...',
+                        type='number',
+                        value='1560',
+                        style=style_input
+                    )
+                ],
+                style=style_div_input
+            ),
+
+            html.Div(
+                [
+                    html.Div(
+                        children='Ширина полосы источника в нанометрах [нм]',
+                        style=style_input
+                    ),
+                    dcc.Input(
+                        id='source_bandwith',
+                        placeholder='Enter a value...',
+                        type='number',
+                        value='45',
+                        style=style_input
+                    )
+                ],
+                style=style_div_input
+            ),
+
+            html.Div(
+                [
+                    html.Div(
+                        children='Разница эффективных показателей преломления волокна',
+                        style=style_input
+                    ),
+                    dcc.Input(
+                        id='delta_n',
+                        placeholder='Enter a value...',
+                        type='number',
+                        value='6.086e-04',
+                        style=style_input
+                    )
+                ],
+                style=style_div_input
+            ),
+
+            html.Button(
+                'Вычислить',
+                id='button-calculate',
+                style={'width': '100%', 'horizontal-align': 'middle', 'marginBottom': '1.5em'}
+            ),
+        ],
+            style={'width': '9%', 'display': 'inline-block', 'vertical-align': 'top'})
     ])
 
-    app.run_server(debug=True, use_reloader=False)
-def main():
+    @app.callback(
+        Output('chart', 'figure'),
+        Input('button-calculate', 'n_clicks')
+    )
+    def calculate(n_clicks):
+        figure = go.Figure(make_subplots(specs=[[{"secondary_y": True}]]))
+        visibility = [i.get_visibility() for i in window.signal]
+        for x, y, name in visibility:
+            figure.add_trace(
+                go.Scatter(
+                    x=x, y=y,
+                    mode='lines',
+                    name=name,
+                    line=dict(width=1)
+                )
+            )
+        figure.update_yaxes(type='log')
+        figure.update_xaxes(title_text="Длина плеча интерферометра, м")
+        figure.update_yaxes(title_text="h-parameter", secondary_y=False)
+        figure.update_yaxes(title_text="PER", secondary_y=True)
+        figure.update_layout(
+            xaxis=dict(
+                rangeslider=dict(
+                    visible=True
+                )
+            )
+        )
+        return figure
 
+    app.run_server(debug=True, use_reloader=False)
+
+
+def main():
     app = QApplication(sys.argv)
     window = Ui()
-    print(window.visibilityWidget.fig)
-    threading.Thread(target=run_dash, args=(window.visibilityWidget.fig,), daemon=True).start()
+    threading.Thread(target=run_dash, args=(window,), daemon=True).start()
     app.exec_()
+
 
 if __name__ == '__main__':
     main()
