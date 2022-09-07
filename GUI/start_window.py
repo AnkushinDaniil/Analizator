@@ -6,9 +6,12 @@ import numpy as np
 import sys
 import os
 import dash
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, State, dash_table
+from dash.dash_table.Format import Format, Scheme, Sign, Symbol
 import threading
 import Data.Signal
+import pandas as pd
+from collections import OrderedDict
 
 
 class Ui(QMainWindow):
@@ -99,108 +102,48 @@ class Ui(QMainWindow):
 
 
 def run_dash(window):
-    app = Dash()
+    data = OrderedDict(
+        [
+            ("Величина", ["Время ввода", "Скорость", "Центральная длина волны источника", "Ширина полосы источника в нанометрах", "Разница эффективных показателей преломления волокна"]),
+            ("Единица измерения", ["с", "мм/c", "нм", "нм", ""]),
+            ("Значение", [30, 1, 1560, 45, 6.086e-04])
+        ]
+    )
+
+    df_default_input = pd.DataFrame(data)
+
     style_input = {'width': '100%'}
     style_div_input = {'marginBottom': '1.5em'}
 
+    app = Dash()
+
     app.layout = html.Div([
+        html.Div(
+            dash_table.DataTable(
+                id='table',
+                data=df_default_input.to_dict('records'),
+                columns=[
+                    {'name': 'Величина', 'id': 'Величина', 'editable': False},
+                    {'name': 'Единица измерения', 'id': 'Единица измерения', 'editable': False},
+                    {'name': 'Значение', 'id': 'Значение', 'type': 'numeric'},
+                ],
+                editable=True
+            ),
+            style={'width': '49%', 'display': 'inline-block'}
+        ),
+
         dcc.Graph(
             id="chart",
             config={"displaylogo": False},
             figure=window.visibilityWidget.fig,
-            style={'width': '89%', 'height': '90vh', 'display': 'inline-block'}
+            style={'width': '89%', 'height': '70vh', 'display': 'inline-block'}
         ),
 
         html.Div([
-            html.Div(
-                [
-                    html.Div(
-                        children='Время ввода [с]',
-                        style=style_input
-                    ),
-                    dcc.Input(
-                        id='total_time',
-                        placeholder='Enter a value...',
-                        type='number',
-                        value='1',
-                        style=style_input
-                    )
-                ],
-                style=style_div_input
-            ),
-
-            html.Div(
-                [
-                    html.Div(
-                        children='Скорость [мм/c]',
-                        style=style_input
-                    ),
-                    dcc.Input(
-                        id='speed',
-                        placeholder='Enter a value...',
-                        type='number',
-                        value='30',
-                        style=style_input
-                    )
-                ],
-                style=style_div_input
-            ),
-
-            html.Div(
-                [
-                    html.Div(
-                        children='Центральная длина волны источника [нм]',
-                        style=style_input
-                    ),
-                    dcc.Input(
-                        id='lambda_source',
-                        placeholder='Enter a value...',
-                        type='number',
-                        value='1560',
-                        style=style_input
-                    )
-                ],
-                style=style_div_input
-            ),
-
-            html.Div(
-                [
-                    html.Div(
-                        children='Ширина полосы источника в нанометрах [нм]',
-                        style=style_input
-                    ),
-                    dcc.Input(
-                        id='source_bandwith',
-                        placeholder='Enter a value...',
-                        type='number',
-                        value='45',
-                        style=style_input
-                    )
-                ],
-                style=style_div_input
-            ),
-
-            html.Div(
-                [
-                    html.Div(
-                        children='Разница эффективных показателей преломления волокна',
-                        style=style_input
-                    ),
-                    dcc.Input(
-                        id='delta_n',
-                        placeholder='Enter a value...',
-                        type='number',
-                        value='6.086e-04',
-                        style=style_input
-                    )
-                ],
-                style=style_div_input
-            ),
-
             html.Button(
                 'Вычислить',
                 id='button-calculate',
-                style={'width': '100%', 'horizontal-align': 'middle', 'marginBottom': '1.5em'}
+                style={'width': '100%', 'marginBottom': '1.5em'}
             ),
         ],
             style={'width': '9%', 'display': 'inline-block', 'vertical-align': 'top'})
@@ -208,9 +151,11 @@ def run_dash(window):
 
     @app.callback(
         Output('chart', 'figure'),
-        Input('button-calculate', 'n_clicks')
+        Input('button-calculate', 'n_clicks'),
+        State('table', 'data')
     )
-    def calculate(n_clicks):
+    def calculate(n_clicks, data):
+        [print(i['Значение']) for i in data]
         figure = go.Figure(make_subplots(specs=[[{"secondary_y": True}]]))
         visibility = [i.get_visibility() for i in window.signal]
         for x, y, name in visibility:
