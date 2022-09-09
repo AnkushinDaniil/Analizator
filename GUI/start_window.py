@@ -5,13 +5,14 @@ from plotly.subplots import make_subplots
 import numpy as np
 import sys
 import os
-import dash
 from dash import Dash, dcc, html, Input, Output, State, dash_table
-from dash.dash_table.Format import Format, Scheme, Sign, Symbol
+import dash_uploader as du
+import dash_bootstrap_components as dbc
 import threading
 import Data.Signal
 import pandas as pd
 from collections import OrderedDict
+import base64
 
 
 class Ui(QMainWindow):
@@ -102,60 +103,130 @@ class Ui(QMainWindow):
 
 
 def run_dash(window):
-    data = OrderedDict(
+    data_default_input = OrderedDict(
         [
-            ("Величина", ["Время ввода", "Скорость", "Центральная длина волны источника", "Ширина полосы источника в нанометрах", "Разница эффективных показателей преломления волокна"]),
+            ("Величина",
+             ["Время ввода", "Скорость", "Центральная длина волны источника", "Ширина полосы источника в нанометрах",
+              "Разница эффективных показателей преломления волокна"]),
             ("Единица измерения", ["с", "мм/c", "нм", "нм", ""]),
             ("Значение", [30, 1, 1560, 45, 6.086e-04])
         ]
     )
 
-    df_default_input = pd.DataFrame(data)
+    df_default_input = pd.DataFrame(data_default_input)
 
-    style_input = {'width': '100%'}
-    style_div_input = {'marginBottom': '1.5em'}
+    data_default_range = OrderedDict(
+        [
+            ("Левая граница, м", [0]),
+            ("Правая граница, м", [0.025])
+        ]
+    )
 
-    app = Dash()
+    df_default_range = pd.DataFrame(data_default_range)
 
-    app.layout = html.Div([
-        html.Div(
-            dash_table.DataTable(
-                id='table',
-                data=df_default_input.to_dict('records'),
-                columns=[
-                    {'name': 'Величина', 'id': 'Величина', 'editable': False},
-                    {'name': 'Единица измерения', 'id': 'Единица измерения', 'editable': False},
-                    {'name': 'Значение', 'id': 'Значение', 'type': 'numeric'},
+    app: Dash = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+    app.layout = dbc.Container(
+        [
+            dbc.Row(
+                [
+                    dbc.Col(
+                        [
+                            html.Div(
+                                dcc.Upload(
+                                    id='upload-data',
+                                    children=html.Div(
+                                        [
+                                            'Перетащите или ',
+                                            html.A('выберете файл')
+                                        ]
+                                    ),
+                                    style={
+                                        'height': '60px',
+                                        'lineHeight': '60px',
+                                        'borderWidth': '1px',
+                                        'borderStyle': 'dashed',
+                                        'borderRadius': '5px',
+                                        'textAlign': 'center',
+                                        'margin': '10px',
+                                    },
+                                    multiple=True
+                                ),
+                            ),
+
+                            html.Div(
+                                dash_table.DataTable(
+                                    id='table_range',
+                                    data=df_default_range.to_dict('records'),
+                                    columns=[
+                                        {'name': 'Левая граница, м', 'id': 'Левая граница, м', 'type': 'numeric'},
+                                        {'name': 'Правая граница, м', 'id': 'Правая граница, м', 'type': 'numeric'},
+                                    ],
+                                    editable=True
+                                ),
+                            ),
+
+                            html.Div(
+                                id='filenames',
+                                children='Имя файла'
+                            )
+                        ],
+                        md=4
+                    ),
+
+                    dbc.Col(
+                        html.Div(
+                            dash_table.DataTable(
+                                id='table_input',
+                                data=df_default_input.to_dict('records'),
+                                columns=[
+                                    {'name': 'Величина', 'id': 'Величина', 'editable': False},
+                                    {'name': 'Единица измерения', 'id': 'Единица измерения', 'editable': False},
+                                    {'name': 'Значение', 'id': 'Значение', 'type': 'numeric'},
+                                ],
+                                editable=True
+                            ),
+                        ),
+                        md=4
+                    ),
                 ],
-                editable=True
+                align="center",
+                justify="around",
             ),
-            style={'width': '49%', 'display': 'inline-block'}
-        ),
 
-        dcc.Graph(
-            id="chart",
-            config={"displaylogo": False},
-            figure=window.visibilityWidget.fig,
-            style={'width': '89%', 'height': '70vh', 'display': 'inline-block'}
-        ),
-
-        html.Div([
-            html.Button(
-                'Вычислить',
-                id='button-calculate',
-                style={'width': '100%', 'marginBottom': '1.5em'}
-            ),
+            dbc.Row(
+                [
+                    dbc.Col(
+                        dcc.Graph(
+                            id="chart",
+                            config={"displaylogo": False},
+                            figure=window.visibilityWidget.fig,
+                            # style={'width': '89%', 'height': '70vh', 'display': 'inline-block'}
+                        )
+                    ),
+                    dbc.Col(
+                        html.Button(
+                            'Вычислить',
+                            id='button-calculate',
+                            style={'width': '100%', 'marginBottom': '1.5em'}
+                        ),
+                        width=1
+                    )
+                ],
+                justify="around",
+            )
         ],
-            style={'width': '9%', 'display': 'inline-block', 'vertical-align': 'top'})
-    ])
+        fluid=True
+    )
 
     @app.callback(
         Output('chart', 'figure'),
         Input('button-calculate', 'n_clicks'),
-        State('table', 'data')
+        State('table_input', 'data'),
+        State('table_range', 'data')
     )
-    def calculate(n_clicks, data):
-        [print(i['Значение']) for i in data]
+    def calculate(n_clicks, data_input, data_range):
+        # [print(i['Значение']) for i in data_input]
         figure = go.Figure(make_subplots(specs=[[{"secondary_y": True}]]))
         visibility = [i.get_visibility() for i in window.signal]
         for x, y, name in visibility:
@@ -179,6 +250,25 @@ def run_dash(window):
             )
         )
         return figure
+
+    def parse_contents(contents, filename):
+        content_type, content_string = contents.split(',')
+        decoded = base64.b64decode(content_string)
+        print(decoded)
+        return decoded
+
+    @app.callback(
+        Output('filenames', 'children'),
+        Input('upload-data', 'filename'),
+        State('upload-data', 'contents')
+    )
+    def open_file(list_of_contents, list_of_names):
+        if list_of_contents is not None:
+            print(1)
+            children = [
+                parse_contents(c, n) for c, n in
+                zip(list_of_contents, list_of_names)]
+            return children
 
     app.run_server(debug=True, use_reloader=False)
 
