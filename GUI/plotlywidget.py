@@ -15,19 +15,6 @@ class PlotlyWidget(QtWidgets.QWidget):
         vertical_layout = QtWidgets.QVBoxLayout()
         vertical_layout.addWidget(self.browser)
 
-        self.fig = go.Figure(make_subplots(specs=[[{"secondary_y": True}]]))
-        self.fig.update_yaxes(type='log')
-        self.fig.update_xaxes(title_text="Длина плеча интерферометра, м")
-        self.fig.update_yaxes(title_text="h-parameter", secondary_y=False)
-        self.fig.update_yaxes(title_text="PER", secondary_y=True)
-        self.fig.update_layout(
-            xaxis=dict(
-                rangeslider=dict(
-                    visible=True
-                )
-            )
-        )
-
         self.setLayout(vertical_layout)
 
 
