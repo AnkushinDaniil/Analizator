@@ -1,13 +1,14 @@
+import json
 import dash_bootstrap_components as dbc
 from PyQt5.QtWidgets import QFileDialog
-from dash import Dash, dcc, html, Input, Output, State, dash_table
+from dash import Dash, dcc, html, Input, Output, State, dash_table, ctx
 from collections import OrderedDict
 import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 from plotly.subplots import make_subplots
 
-import Data
+from Data import Signal
 
 
 class DashApp:
@@ -19,7 +20,9 @@ class DashApp:
         self.signal = []
         self.set_data_input(30, 1, 1560, 45, 6.086e-04)
         self.set_data_range(0, 0.025)
-        self._filenames = []
+        self._filenames = np.array([])
+        self.set_figure()
+        self.traces = set()
         self.app.layout = dbc.Container(
             [
                 dbc.Row(
@@ -78,20 +81,26 @@ class DashApp:
                             dcc.Graph(
                                 id="chart",
                                 config={"displaylogo": False},
-                                figure=go.Figure(make_subplots(specs=[[{"secondary_y": True}]])),
+                                figure=self.figure,
                                 # style={'width': '89%', 'height': '70vh', 'display': 'inline-block'}
                             )
                         ),
                         dbc.Col(
                             html.Button(
-                                'Вычислить',
-                                id='button-calculate',
+                                'Построить',
+                                id='button-build',
                                 style={'width': '100%', 'marginBottom': '1.5em'}
                             ),
                             width=1
                         )
                     ],
                     justify="around",
+                ),
+                dbc.Row(
+                    html.Div(
+                        id='selected-data',
+                        children=''
+                    )
                 )
             ],
             fluid=True
@@ -103,51 +112,92 @@ class DashApp:
     def callbacks(self, app):
         @app.callback(
             Output('chart', 'figure'),
-            Input('button-calculate', 'n_clicks'),
+            Input('button-build', 'n_clicks'),
+            # Input('chart', 'clickData'),
             State('table_input', 'data'),
-            State('table_range', 'data')
+            State('table_range', 'data'),
+            prevent_initial_call=True
         )
-        def calculate(n_clicks, data_input, data_range=None):
-            float_parameters = self.str2float(*[i['Значение'] for i in data_input])
-            filenames = self.get_filenames()
-            if isinstance(float_parameters, list):
-                if len(float_parameters) == 5:
-                    self.signal = [Data.Signal.Signal(np.fromfile(i), *float_parameters, name=i.split('/')[-1]) for i in
-                                   filenames]
-                else:
-                    self.show_error()
+        def calculate(n_clicks, clickData, data_input, data_range=None):
+            triggered_id = ctx.triggered_id
+            if triggered_id == 'button-build':   
+                float_parameters = self.str2float(*[i['Значение'] for i in data_input])
+                filenames = self.get_filenames()
+                if isinstance(float_parameters, list):
+                    if len(float_parameters) == 5:
+                        self.signal = [Signal.Signal(np.fromfile(i), *float_parameters, name=i.split('/')[-1]) for i in
+                                       filenames]
+                    else:
+                        self.show_error()
 
-            figure = go.Figure(make_subplots(specs=[[{"secondary_y": True}]]))
-            visibility = [i.get_visibility() for i in self.signal]
-            for x, y, name in visibility:
-                figure.add_trace(
-                    go.Scatter(
-                        x=x, y=y,
-                        mode='lines',
-                        name=name,
-                        line=dict(width=1)
-                    )
-                )
-            figure.update_yaxes(type='log')
-            figure.update_xaxes(title_text="Длина плеча интерферометра, м")
-            figure.update_yaxes(title_text="h-parameter", secondary_y=False)
-            figure.update_yaxes(title_text="PER", secondary_y=True)
-            figure.update_layout(
-                xaxis=dict(
-                    rangeslider=dict(
-                        visible=True
-                    )
-                )
-            )
-            return figure
+                visibility = [i.get_visibility() for i in self.signal]
+                for x, y, name in visibility:
+                    if not (name in self.traces):
+                        self.traces.add(name)
+                        self.figure.add_trace(
+                            go.Scatter(
+                                x=x, y=y,
+                                mode='lines',
+                                name=name,
+                                line=dict(width=1)
+                            )
+                        )
+                        # self.figure.add_trace(
+                        #     go.Scatter(
+                        #         x=[], y=[],
+                        #         mode='markers',
+                        #         name='Выбранное в ' + name,
+                        #         marker=dict(size=5),
+                        #         text=[]
+                        #     )
+                        # )
+            # elif triggered_id == 'chart':
+            #     i = clickData['points'][0]
+            #     j = i['curveNumber'] + 1
+            #     x = i['x']
+            #     y = i['y']
+            #     text = f'{x}, {y}'
+            #     x_list = list(self.figure.data[j]['x'])
+            #     y_list = list(self.figure.data[j]['y'])
+            #     text_list = list(self.figure.data[j]['text'])
+            #     if x in self.figure.data[j]['x']:
+            #         x_list.remove(x)
+            #         y_list.remove(y)
+            #         text_list.remove(f'{x}, {y}')
+            #     else:
+            #         x_list.append(x)
+            #         y_list.append(y)
+            #         text_list.append(f'{x}, {y}')
+            #     self.figure.data[j]['x'] = tuple(x_list)
+            #     self.figure.data[j]['y'] = tuple(y_list)
+            #     self.figure.data[j]['text'] = tuple(text_list)
+            return self.figure
 
         @app.callback(
             Output('dir', 'children'),
-            Input('file-selector', 'n_clicks')
+            [Input('file-selector', 'n_clicks')],
+            prevent_initial_call=True
         )
         def open_file(n_clicks=None):
             filenames, _ = QFileDialog.getOpenFileNames()
             self.set_filenames(filenames)
+
+    def set_figure(self):
+        self.figure = go.Figure(make_subplots(specs=[[{"secondary_y": True}]]))
+        self.figure.update_yaxes(type='log')
+        self.figure.update_xaxes(title_text="Длина плеча интерферометра, м")
+        self.figure.update_yaxes(title_text="h-parameter", secondary_y=False)
+        self.figure.update_yaxes(title_text="PER", secondary_y=True)
+        self.figure.update_layout(
+            xaxis=dict(
+                rangeslider=dict(
+                    visible=True
+                )
+            )
+        )
+        self.figure.update_layout(uirevision="Don't change")
+        # self.figure.update_layout(clickmode='event+select')
+        self.figure.update_traces(textposition="top")
 
     def set_data_input(self, *args):
         data_default_input = OrderedDict(
