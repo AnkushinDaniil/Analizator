@@ -84,7 +84,9 @@ class DashApp:
                                     config={"displaylogo": False},
                                     figure=self.figure['h-parameter'],
                                 )
-                            ]
+                            ],
+                            width=10,
+                            align="center"
                         ),
                         dbc.Col(
                             [
@@ -131,16 +133,21 @@ class DashApp:
 
     def callbacks(self, app):
         @app.callback(
-            Output('visibility', 'figure'),
-            Input('button-build', 'n_clicks'),
-            # Input('visibility', 'clickData'),
-            State('table_input', 'data'),
-            State('table_range', 'data'),
+            [
+                Output('visibility', 'figure'),
+                Output('h-parameter', 'figure'),
+            ],
+            [
+                Input('button-build', 'n_clicks'),
+                # Input('visibility', 'clickData'),
+                State('table_input', 'data'),
+                State('table_range', 'data')
+            ],
             prevent_initial_call=True
         )
-        def calculate(n_clicks, data_input, data_range=None):
+        def calculate(n_clicks, data_input, data_range):
             triggered_id = ctx.triggered_id
-            if triggered_id == 'button-build':   
+            if triggered_id == 'button-build':
                 float_parameters = self.str2float(*[i['Значение'] for i in data_input])
                 filenames = self.get_filenames()
                 if isinstance(float_parameters, list):
@@ -151,10 +158,12 @@ class DashApp:
                         self.show_error()
 
                 visibility = [i.get_visibility() for i in self.signal]
-                for x, y, name in visibility:
-                    if not (name in self.traces):
+                h_param = [i.get_h_param() for i in self.signal]
+                for key, value in zip(['visibility', 'h-parameter'], [visibility, h_param]):
+                    for x, y, name in value:
+                        # if not (name in self.traces):
                         self.traces.add(name)
-                        self.figure.add_trace(
+                        self.figure[key].add_trace(
                             go.Scatter(
                                 x=x, y=y,
                                 mode='lines',
@@ -162,7 +171,19 @@ class DashApp:
                                 line=dict(width=1)
                             )
                         )
-            return self.figure
+
+            return self.figure['visibility'], self.figure['h-parameter']
+
+        @app.callback(
+            Output('table_range', 'data'),
+            Input('visibility', 'relayoutData'),
+        )
+        def display_relayout_data(relayoutData):
+            try:
+                self.set_data_range(relayoutData['xaxis.range[0]'], relayoutData['xaxis.range[1]'])
+            except:
+                pass
+            return self.get_data_range()
 
         @app.callback(
             Output('dir', 'children'),
@@ -176,24 +197,24 @@ class DashApp:
     def set_figure(self):
         self.figure = {
             'visibility': go.Figure(),
-            'h-parameter': go.Figure(make_subplots(specs=[[{"secondary_y": True}]]))
+            'h-parameter': go.Figure()
         }
 
         self.figure['visibility'].update_yaxes(type='log')
         self.figure['visibility'].update_yaxes(title_text="Видность")
         self.figure['visibility'].update_xaxes(title_text="Длина плеча интерферометра, м")
 
-        self.figure['h-parameter'].update_yaxes(title_text="h-parameter", secondary_y=False)
-        self.figure['h-parameter'].update_yaxes(title_text="PER", secondary_y=True)
-        self.figure['h-parameter'].update_xaxes(title_text="Длина оптического пути, м")
+        self.figure['h-parameter'].update_yaxes(type='log')
+        self.figure['h-parameter'].update_yaxes(title_text="h-parameter")
+        self.figure['h-parameter'].update_xaxes(title_text="Длина волокна, м")
 
         for i in self.figure.keys():
             self.figure[i].update_layout(
-                xaxis=dict(
-                    rangeslider=dict(
-                        visible=True
-                    )
-                )
+                # xaxis=dict(
+                #     rangeslider=dict(
+                #         visible=True
+                #     )
+                # )
             )
             self.figure[i].update_layout(uirevision="Don't change")
             # self.figure.update_layout(clickmode='event+select')
