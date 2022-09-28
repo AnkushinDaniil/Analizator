@@ -16,7 +16,6 @@ class Ui(QMainWindow):
         self.showMaximized()  # Show the GUI
         self.visibilityWidget.show_graph()
 
-
 def run_dash():
     dash_app = DashApp()
     dash_app.app.run_server(debug=True, use_reloader=False)
