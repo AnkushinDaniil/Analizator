@@ -6,7 +6,9 @@ from collections import OrderedDict
 import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
-from plotly.subplots import make_subplots
+from scipy.io import savemat
+
+import csv
 
 from Data import Signal
 
@@ -29,51 +31,6 @@ class DashApp:
                     [
                         dbc.Col(
                             [
-                                html.Div(
-                                    dash_table.DataTable(
-                                        id='table_range',
-                                        data=self.get_data_range(),
-                                        columns=[
-                                            {'name': 'Левая граница, м', 'id': 'Левая граница, м', 'type': 'numeric'},
-                                            {'name': 'Правая граница, м', 'id': 'Правая граница, м', 'type': 'numeric'},
-                                        ],
-                                        editable=True
-                                    ),
-                                ),
-
-                                html.Div(
-                                    id='dir',
-                                    children='Директория'
-                                )
-                            ],
-                            width=2,
-                            align="center"
-                        ),
-
-                        dbc.Col(
-                            html.Div(
-                                dash_table.DataTable(
-                                    id='table_input',
-                                    data=self.get_data_input(),
-                                    columns=[
-                                        {'name': 'Величина', 'id': 'Величина', 'editable': False},
-                                        {'name': 'Единица измерения', 'id': 'Единица измерения', 'editable': False},
-                                        {'name': 'Значение', 'id': 'Значение', 'type': 'numeric'},
-                                    ],
-                                    editable=True
-                                ),
-                            ),
-                            md=4
-                        ),
-                    ],
-                    align="center",
-                    justify="around",
-                ),
-
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            [
                                 dcc.Graph(
                                     id="visibility",
                                     config={"displaylogo": False},
@@ -90,39 +47,122 @@ class DashApp:
                         ),
                         dbc.Col(
                             [
-                                dbc.ButtonGroup(
-                                    [
-                                        dbc.Button(
-                                            'Выбрать файл',
-                                            id='file-selector',
-                                            className="me-1"
-                                        ),
-                                        dbc.Button(
-                                            'Построить',
-                                            id='button-build',
-                                            className="me-1"
-                                        ),
-                                        dbc.Button("Кнопка"),
-                                        dbc.DropdownMenu(
-                                            [dbc.DropdownMenuItem("Item 1"), dbc.DropdownMenuItem("Item 2")],
-                                            label="Dropdown",
-                                            group=True,
-                                        ),
-                                    ],
-                                    vertical=True,
+                                dbc.Row(
+                                    dash_table.DataTable(
+                                        id='table_input',
+                                        data=self.get_data_input(),
+                                        columns=[
+                                            {'name': 'Величина', 'id': 'Величина', 'editable': False},
+                                            {'name': 'Значение', 'id': 'Значение', 'type': 'numeric'},
+                                        ],
+                                        style_data={
+                                            'whiteSpace': 'normal',
+                                            'height': 'auto',
+                                        },
+                                        editable=True
+                                    ),
+                                    align="center",
+                                    className="mb-4"
+                                ),
+
+                                dbc.Row(
+                                    dbc.ButtonGroup(
+                                        [
+                                            dbc.Button(
+                                                'Выбрать файл',
+                                                id='file-selector',
+                                                className="me-1"
+                                            ),
+                                            dbc.Button(
+                                                'Построить',
+                                                id='button-build',
+                                                className="me-1"
+                                            ),
+                                        ],
+                                        vertical=True,
+                                    ),
+                                    align="center",
+                                    className="mb-4"
+                                ),
+
+                                html.Div(
+                                    dash_table.DataTable(
+                                        id='table_range',
+                                        data=self.get_data_range(),
+                                        columns=[
+                                            {'name': 'Левая граница, м', 'id': 'Левая граница, м',
+                                             'type': 'numeric'},
+                                            {'name': 'Правая граница, м', 'id': 'Правая граница, м',
+                                             'type': 'numeric'},
+                                        ],
+                                        editable=True
+                                    ),
+                                    className="mb-4"
+                                ),
+
+                                html.Div(
+                                    id='dir',
+                                    children='Директория',
+                                    className="mb-4"
+                                ),
+
+                                dbc.Row(
+                                    dbc.ButtonGroup(
+                                        [
+                                            dbc.RadioItems(
+                                                id="export_file",
+                                                className="btn-group",
+                                                inputClassName="btn-check",
+                                                labelClassName="btn btn-outline-primary",
+                                                labelCheckedClassName="active",
+                                                options=[
+                                                    {"label": "mat", "value": 1},
+                                                    {"label": "html", "value": 2},
+                                                    {"label": "csv", "value": 3},
+                                                ],
+                                                value=1,
+                                            ),
+                                            dbc.RadioItems(
+                                                id="export_chart",
+                                                className="btn-group",
+                                                inputClassName="btn-check",
+                                                labelClassName="btn btn-outline-primary",
+                                                labelCheckedClassName="active",
+                                                options=[
+                                                    {"label": "h-parameter", "value": 1},
+                                                    {"label": "Видность", "value": 2},
+                                                ],
+                                                value=1,
+                                            ),
+                                            dbc.Button(
+                                                'Экспортировать',
+                                                id='button-export',
+                                                className="me-1"
+                                            ),
+                                        ],
+                                        vertical=True,
+                                    ),
+                                    align="center",
+                                    className="mb-4"
                                 )
                             ],
-                            width=1,
-                            align="center"
+                            width=2,
+                            align="center",
                         )
                     ],
                     justify="around",
                 ),
                 dbc.Row(
-                    html.Div(
-                        id='selected-data',
-                        children=''
-                    )
+                    [
+                        html.Div(
+                            id='selected-data',
+                            children=''
+                        ),
+                        html.Div(
+                            id='hidden',
+                            style={'display': 'none'}
+                        )
+                    ]
                 )
             ],
             fluid=True
@@ -194,6 +234,36 @@ class DashApp:
             filenames, _ = QFileDialog.getOpenFileNames()
             self.set_filenames(filenames)
 
+        @app.callback(
+            Output('hidden', 'children'),
+            [
+                Input('button-export', 'n_clicks'),
+                State("export_file", "value"),
+                State("export_chart", "value"),
+            ],
+            prevent_initial_call=True
+        )
+        def export(n_clicks, value_file, value_chart):
+            if value_chart == 1:
+                chart = [i.get_h_param() for i in self.signal]
+                key = 'h-parameter'
+            else:
+                chart = [i.get_visibility() for i in self.signal]
+                key = 'visibility'
+
+            filename = '_'.join([name.split('.')[0] for x, y, name in chart])
+
+            if value_file == 1:
+                mdic = {'data_' + name.split('.')[0]: {'x': x, 'y': y} for x, y, name in chart}
+                savemat(f"{filename}.mat", mdic)
+            elif value_file == 2:
+                self.figure[key].write_html(filename + '.html')
+            elif value_file == 3:
+                for x, y, name in chart:
+                    df = pd.DataFrame({'x': x, 'y': y})
+                    df.to_csv(name + '.csv')
+            return None
+
     def set_figure(self):
         self.figure = {
             'visibility': go.Figure(),
@@ -204,8 +274,8 @@ class DashApp:
         self.figure['visibility'].update_yaxes(title_text="Видность")
         self.figure['visibility'].update_xaxes(title_text="Длина плеча интерферометра, м")
 
-        self.figure['h-parameter'].update_yaxes(type='log')
-        self.figure['h-parameter'].update_yaxes(title_text="h-parameter")
+        # self.figure['h-parameter'].update_yaxes(type='log')
+        self.figure['h-parameter'].update_yaxes(title_text="h-parameter, дБ")
         self.figure['h-parameter'].update_xaxes(title_text="Длина волокна, м")
 
         for i in self.figure.keys():
@@ -223,10 +293,9 @@ class DashApp:
         data_default_input = OrderedDict(
             [
                 ("Величина",
-                 ["Время ввода", "Скорость", "Центральная длина волны источника",
-                  "Ширина полосы источника в нанометрах",
+                 ["Время ввода, c", "Скорость, мм/c", "Центральная длина волны источника, нм",
+                  "Ширина полосы источника, нм",
                   "Разница эффективных показателей преломления волокна"]),
-                ("Единица измерения", ["с", "мм/c", "нм", "нм", ""]),
                 ("Значение", args)
             ]
         )

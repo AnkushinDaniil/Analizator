@@ -22,8 +22,8 @@ class Signal:
             n = np.size(signal)
             self.speed = speed / 1000
             self.total_time = total_time
-            self.lambda_source = lambda_source
-            self.source_bandwith = source_bandwith
+            self.lambda_source = lambda_source / 10 ** 9
+            self.source_bandwith = source_bandwith / 10 ** 9
             self.delta_n = delta_n
             self.name = name
             self.n_to_length = total_time * speed / n
@@ -110,6 +110,6 @@ class Signal:
         y = np.divide(y, np.max(y))
         self.beat_length = self.lambda_source / self.delta_n
         self.length_depol = (self.lambda_source ** 2) / (self.source_bandwith * self.delta_n)
-        h_param = np.square(y) / self.length_depol
+        h_param = 10 * np.log10(np.square(y) / self.length_depol)
         fiber_length = x * 0.002 / self.delta_n
         return fiber_length, h_param, name
