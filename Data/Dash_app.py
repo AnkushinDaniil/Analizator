@@ -1,14 +1,11 @@
-import json
-import dash_bootstrap_components as dbc
 from PyQt5.QtWidgets import QFileDialog
-from dash import Dash, dcc, html, Input, Output, State, dash_table, ctx
 from collections import OrderedDict
 import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 from scipy.io import savemat
-
-import csv
+from dash import Dash, dcc, html, Input, Output, State, dash_table, ctx
+import dash_bootstrap_components as dbc
 
 from Data import Signal
 
