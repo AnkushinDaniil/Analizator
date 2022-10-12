@@ -1,13 +1,32 @@
 import sys
-import threading
-from multiprocess import Process, freeze_support
+import os
+from multiprocessing import freeze_support, Process
+from concurrent.futures import ThreadPoolExecutor
+from PyQt5 import QtWidgets, QtCore
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
+app = QtWidgets.QApplication([''])
+from PyQt5 import QtWebEngineWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 from Data.Dash_app import DashApp
-from plotlywidget import PlotlyWidget
 
+
+class PlotlyWidget(QtWidgets.QWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.browser = QtWebEngineWidgets.QWebEngineView(self)
+
+        vertical_layout = QtWidgets.QVBoxLayout()
+        vertical_layout.addWidget(self.browser)
+
+        self.setLayout(vertical_layout)
+
+    def show_graph(self):
+        url = QtCore.QUrl(u'http://127.0.0.1:8050/')
+        self.browser.load(url)
 
 class Ui(QMainWindow):
 
@@ -49,7 +68,7 @@ class Ui(QMainWindow):
 
 def run_dash():
     dash_app = DashApp()
-    dash_app.app.run_server(debug=True, use_reloader=False)
+    dash_app.app.run_server(debug=False, use_reloader=False)
 
 
 def main():
@@ -59,6 +78,10 @@ def main():
     Process(target=run_dash, daemon=True).start()
     # threading.Thread(target=run_dash, args=(), daemon=True).start()
     main_app.exec_()
+
+
+# def doer(func):
+#     func()
 
 
 if __name__ == '__main__':

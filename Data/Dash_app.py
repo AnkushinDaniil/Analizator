@@ -1,19 +1,36 @@
-from PyQt5.QtWidgets import QFileDialog
+import os
+import sys
 from collections import OrderedDict
+from tkinter import Tk
+
 import pandas as pd
 import plotly.graph_objects as go
 import numpy as np
 from scipy.io import savemat
 from dash import Dash, dcc, html, Input, Output, State, dash_table, ctx
 import dash_bootstrap_components as dbc
+from tkinter.filedialog import askopenfilenames, asksaveasfilename
 
 from Data import Signal
 
 
+def resource_path(relative_path):
+    # get absolute path to resource
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+
 class DashApp:
-    app: Dash = Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
+    app = Dash(__name__, assets_folder=resource_path("assets"), external_stylesheets=[dbc.themes.BOOTSTRAP])
 
     def __init__(self):
+        self.figure = None
+        self.dir = ''
         self._data_range = None
         self._data_input = None
         self.signal = []
@@ -21,7 +38,6 @@ class DashApp:
         self.set_data_range(0, 0.025)
         self._filenames = np.array([])
         self.set_figure()
-        self.traces = set()
         self.app.layout = dbc.Container(
             [
                 dbc.Row(
@@ -196,10 +212,9 @@ class DashApp:
 
                 visibility = [i.get_visibility() for i in self.signal]
                 h_param = [i.get_h_param() for i in self.signal]
+                self.set_figure()
                 for key, value in zip(['visibility', 'h-parameter'], [visibility, h_param]):
                     for x, y, name in value:
-                        # if not (name in self.traces):
-                        self.traces.add(name)
                         self.figure[key].add_trace(
                             go.Scatter(
                                 x=x, y=y,
@@ -228,8 +243,15 @@ class DashApp:
             prevent_initial_call=True
         )
         def open_file(n_clicks=None):
-            filenames, _ = QFileDialog.getOpenFileNames()
-            self.set_filenames(filenames)
+            def select_file():
+                root = Tk()
+                root.withdraw()
+                root.focus_force()
+                res = askopenfilenames(parent=root)
+                root.destroy()
+                return res
+
+            self.set_filenames(select_file())
 
         @app.callback(
             Output('hidden', 'children'),
@@ -241,6 +263,18 @@ class DashApp:
             prevent_initial_call=True
         )
         def export(n_clicks, value_file, value_chart):
+            def save_file(file_name, extension):
+                root = Tk()
+                root.withdraw()
+                root.focus_force()
+
+                data = [(extension, f'*.{extension}')]
+
+                res = asksaveasfilename(filetypes=data, defaultextension=data,
+                                        initialfile=file_name)
+                root.destroy()
+                return res
+
             if value_chart == 1:
                 chart = [i.get_h_param() for i in self.signal]
                 key = 'h-parameter'
@@ -252,13 +286,19 @@ class DashApp:
 
             if value_file == 1:
                 mdic = {'data_' + name.split('.')[0]: {'x': x, 'y': y} for x, y, name in chart}
-                savemat(f"{filename}.mat", mdic)
+                file_out = save_file(filename, 'mat')
+                if file_out:
+                    savemat(f"{file_out}", mdic)
             elif value_file == 2:
-                self.figure[key].write_html(filename + '.html')
+                file_out = save_file(filename, 'html')
+                if file_out:
+                    self.figure[key].write_html(file_out + '.html')
             elif value_file == 3:
                 for x, y, name in chart:
                     df = pd.DataFrame({'x': x, 'y': y})
-                    df.to_csv(name + '.csv')
+                    file_out = save_file(name, 'csv')
+                    if file_out:
+                        df.to_csv(file_out + '.csv')
             return None
 
     def set_figure(self):
@@ -271,7 +311,6 @@ class DashApp:
         self.figure['visibility'].update_yaxes(title_text="Видность")
         self.figure['visibility'].update_xaxes(title_text="Длина плеча интерферометра, м")
 
-        # self.figure['h-parameter'].update_yaxes(type='log')
         self.figure['h-parameter'].update_yaxes(title_text="h-parameter, дБ")
         self.figure['h-parameter'].update_xaxes(title_text="Длина волокна, м")
 
@@ -338,10 +377,10 @@ class DashApp:
     def set_filenames(self, filenames):
         self._filenames = filenames
         if self._filenames:
-            res = '/'.join(self._filenames[0].split('/')[:-1])
+            self.dir = '/'.join(self._filenames[0].split('/')[:-1]) + '/'
         else:
-            res = 'Директория'
-        return res
+            self.dir = ''
+        return self.dir
 
     def get_filenames(self):
         return self._filenames
@@ -349,4 +388,4 @@ class DashApp:
 
 if __name__ == '__main__':
     dash_app = DashApp()
-    dash_app.app.run_server(debug=True, use_reloader=False)
+    dash_app.app.run_server(debug=False, use_reloader=False)
