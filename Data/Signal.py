@@ -2,7 +2,9 @@ import numpy as np
 
 class Signal:
 
-    def __init__(self, signal, speed, total_time, lambda_source, source_bandwith, delta_n, name=''):
+    def __init__(self, signal, speed, total_time, lambda_source, source_bandwith, delta_n, ADC_frequency, phase_modulation_frequency, name=''):
+        self.ADC_frequency = None
+        self.phase_modulation_frequency = None
         self.__h_param = None
         self.__visibility = None
         self.__periodicity_of_the_interference_pattern = None

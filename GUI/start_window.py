@@ -1,7 +1,5 @@
 import sys
-import os
 from multiprocessing import freeze_support, Process
-from concurrent.futures import ThreadPoolExecutor
 from PyQt5 import QtWidgets, QtCore
 
 QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
@@ -27,6 +25,7 @@ class PlotlyWidget(QtWidgets.QWidget):
     def show_graph(self):
         url = QtCore.QUrl(u'http://127.0.0.1:8050/')
         self.browser.load(url)
+
 
 class Ui(QMainWindow):
 
@@ -76,7 +75,6 @@ def main():
     main_app = QApplication(sys.argv)
     window = Ui()
     Process(target=run_dash, daemon=True).start()
-    # threading.Thread(target=run_dash, args=(), daemon=True).start()
     main_app.exec_()
 
 

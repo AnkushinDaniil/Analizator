@@ -5,11 +5,16 @@ from tkinter import Tk
 
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.io as pio
+
+pio.kaleido.scope.default_format = "png"
 import numpy as np
 from scipy.io import savemat
 from dash import Dash, dcc, html, Input, Output, State, dash_table, ctx
 import dash_bootstrap_components as dbc
 from tkinter.filedialog import askopenfilenames, asksaveasfilename
+import io
+import PIL.Image as Image
 
 from Data import Signal
 
@@ -34,7 +39,7 @@ class DashApp:
         self._data_range = None
         self._data_input = None
         self.signal = []
-        self.set_data_input(30, 1, 1560, 45, 6.086e-04)
+        self.set_data_input(30, 1, 1560, 45, 6.086e-04, 500_000, 250_000)
         self.set_data_range(0, 0.025)
         self._filenames = np.array([])
         self.set_figure()
@@ -82,12 +87,7 @@ class DashApp:
                                     dbc.ButtonGroup(
                                         [
                                             dbc.Button(
-                                                'Выбрать файл',
-                                                id='file-selector',
-                                                className="me-1"
-                                            ),
-                                            dbc.Button(
-                                                'Построить',
+                                                'Выбрать файл и построить',
                                                 id='button-build',
                                                 className="me-1"
                                             ),
@@ -126,12 +126,13 @@ class DashApp:
                                                 id="export_file",
                                                 className="btn-group",
                                                 inputClassName="btn-check",
-                                                labelClassName="btn btn-outline-primary",
+                                                labelClassName="btn btn-primary btn-sm",
                                                 labelCheckedClassName="active",
                                                 options=[
                                                     {"label": "mat", "value": 1},
                                                     {"label": "html", "value": 2},
                                                     {"label": "csv", "value": 3},
+                                                    {"label": "png", "value": 4},
                                                 ],
                                                 value=1,
                                             ),
@@ -201,10 +202,19 @@ class DashApp:
         def calculate(n_clicks, data_input, data_range):
             triggered_id = ctx.triggered_id
             if triggered_id == 'button-build':
+                def select_file():
+                    root = Tk()
+                    root.withdraw()
+                    root.focus_force()
+                    res = askopenfilenames(parent=root)
+                    root.destroy()
+                    return res
+
+                self.set_filenames(select_file())
                 float_parameters = self.str2float(*[i['Значение'] for i in data_input])
                 filenames = self.get_filenames()
                 if isinstance(float_parameters, list):
-                    if len(float_parameters) == 5:
+                    if len(float_parameters) == 7:
                         self.signal = [Signal.Signal(np.fromfile(i), *float_parameters, name=i.split('/')[-1]) for i in
                                        filenames]
                     else:
@@ -223,6 +233,7 @@ class DashApp:
                                 line=dict(width=1)
                             )
                         )
+                    self.figure[key].update_layout(showlegend=True)
 
             return self.figure['visibility'], self.figure['h-parameter']
 
@@ -236,22 +247,6 @@ class DashApp:
             except:
                 pass
             return self.get_data_range()
-
-        @app.callback(
-            Output('dir', 'children'),
-            [Input('file-selector', 'n_clicks')],
-            prevent_initial_call=True
-        )
-        def open_file(n_clicks=None):
-            def select_file():
-                root = Tk()
-                root.withdraw()
-                root.focus_force()
-                res = askopenfilenames(parent=root)
-                root.destroy()
-                return res
-
-            self.set_filenames(select_file())
 
         @app.callback(
             Output('hidden', 'children'),
@@ -299,6 +294,13 @@ class DashApp:
                     file_out = save_file(name, 'csv')
                     if file_out:
                         df.to_csv(file_out + '.csv')
+            elif value_file == 4:
+                file_out = save_file(filename, 'png')
+                if file_out:
+                    img_bytes = self.figure[key].to_image(format='png')
+                    print(img_bytes)
+                    image = Image.open(io.BytesIO(img_bytes))
+                    image.save(file_out + '.png')
             return None
 
     def set_figure(self):
@@ -316,14 +318,8 @@ class DashApp:
 
         for i in self.figure.keys():
             self.figure[i].update_layout(
-                # xaxis=dict(
-                #     rangeslider=dict(
-                #         visible=True
-                #     )
-                # )
             )
             self.figure[i].update_layout(uirevision="Don't change")
-            # self.figure.update_layout(clickmode='event+select')
 
     def set_data_input(self, *args):
         data_default_input = OrderedDict(
@@ -331,7 +327,9 @@ class DashApp:
                 ("Величина",
                  ["Время ввода, c", "Скорость, мм/c", "Центральная длина волны источника, нм",
                   "Ширина полосы источника, нм",
-                  "Разница эффективных показателей преломления волокна"]),
+                  "Разница эффективных показателей преломления волокна",
+                  "Частота АЦП, Гц",
+                  "Частота фазовой модуляции"]),
                 ("Значение", args)
             ]
         )
