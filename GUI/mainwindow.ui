@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Analizator</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
@@ -137,7 +137,7 @@
         <item row="6" column="1">
          <widget class="QLineEdit" name="phase_modulation_frequency">
           <property name="text">
-           <string>250000</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
@@ -155,43 +155,22 @@
           <string>Видность</string>
          </property>
         </item>
+        <item>
+         <property name="text">
+          <string>Интерференция</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Фильтрованная интерференция</string>
+         </property>
+        </item>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="openButton">
+       <widget class="QPushButton" name="buildButton">
         <property name="text">
-         <string>Выбрать файл и построить</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="exportFile">
-        <item>
-         <property name="text">
-          <string>mat</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>html</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>csv</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>png</string>
-         </property>
-        </item>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="saveButton">
-        <property name="text">
-         <string>Сохранить</string>
+         <string>Построить</string>
         </property>
        </widget>
       </item>
@@ -208,8 +187,32 @@
      <height>26</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Файл</string>
+    </property>
+    <addaction name="newButton"/>
+    <addaction name="openButton"/>
+    <addaction name="saveButton"/>
+   </widget>
+   <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="newButton">
+   <property name="text">
+    <string>Новый</string>
+   </property>
+  </action>
+  <action name="openButton">
+   <property name="text">
+    <string>Открыть</string>
+   </property>
+  </action>
+  <action name="saveButton">
+   <property name="text">
+    <string>Сохранить</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

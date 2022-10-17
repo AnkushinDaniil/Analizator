@@ -26,7 +26,6 @@ class Ui_MainWindow(object):
         self.filenames = None
 
     def setupUi(self, MainWindow):
-        """Код функции сгенерирован с помощью pyuic5"""
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1050, 735)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -95,29 +94,33 @@ class Ui_MainWindow(object):
         self.graphType.setObjectName("graphType")
         self.graphType.addItem("")
         self.graphType.addItem("")
+        self.graphType.addItem("")
+        self.graphType.addItem("")
         self.verticalLayout.addWidget(self.graphType)
-        self.openButton = QtWidgets.QPushButton(self.centralwidget)
-        self.openButton.setObjectName("openButton")
-        self.verticalLayout.addWidget(self.openButton)
-        self.exportFile = QtWidgets.QComboBox(self.centralwidget)
-        self.exportFile.setObjectName("exportFile")
-        self.exportFile.addItem("")
-        self.exportFile.addItem("")
-        self.exportFile.addItem("")
-        self.exportFile.addItem("")
-        self.verticalLayout.addWidget(self.exportFile)
-        self.saveButton = QtWidgets.QPushButton(self.centralwidget)
-        self.saveButton.setObjectName("saveButton")
-        self.verticalLayout.addWidget(self.saveButton)
+        self.buildButton = QtWidgets.QPushButton(self.centralwidget)
+        self.buildButton.setObjectName("buildButton")
+        self.verticalLayout.addWidget(self.buildButton)
         self.horizontalLayout.addLayout(self.verticalLayout)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1050, 26))
         self.menubar.setObjectName("menubar")
+        self.menu = QtWidgets.QMenu(self.menubar)
+        self.menu.setObjectName("menu")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
+        self.newButton = QtWidgets.QAction(MainWindow)
+        self.newButton.setObjectName("newButton")
+        self.openButton = QtWidgets.QAction(MainWindow)
+        self.openButton.setObjectName("openButton")
+        self.saveButton = QtWidgets.QAction(MainWindow)
+        self.saveButton.setObjectName("saveButton")
+        self.menu.addAction(self.newButton)
+        self.menu.addAction(self.openButton)
+        self.menu.addAction(self.saveButton)
+        self.menubar.addAction(self.menu.menuAction())
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -125,9 +128,8 @@ class Ui_MainWindow(object):
         self.add_functions()  # Добавление функционала к элементам интерфейса
 
     def retranslateUi(self, MainWindow):
-        """Значения элементов интерфейса"""
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Analizator"))
         self.label.setText(_translate("MainWindow", "Время ввода, с"))
         self.total_time.setText(_translate("MainWindow", "30"))
         self.label_2.setText(_translate("MainWindow", "Скорость, мм/c"))
@@ -141,19 +143,23 @@ class Ui_MainWindow(object):
         self.label_6.setText(_translate("MainWindow", "Частота АЦП, Гц"))
         self.ADC_frequency.setText(_translate("MainWindow", "500000"))
         self.label_7.setText(_translate("MainWindow", "Частота фазовой модуляции"))
-        self.phase_modulation_frequency.setText(_translate("MainWindow", "250000"))
+        self.phase_modulation_frequency.setText(_translate("MainWindow", "0"))
         self.graphType.setItemText(0, _translate("MainWindow", "h-параметр"))
         self.graphType.setItemText(1, _translate("MainWindow", "Видность"))
-        self.openButton.setText(_translate("MainWindow", "Выбрать файл и построить"))
-        self.exportFile.setItemText(0, _translate("MainWindow", "mat"))
-        self.exportFile.setItemText(1, _translate("MainWindow", "html"))
-        self.exportFile.setItemText(2, _translate("MainWindow", "csv"))
-        self.exportFile.setItemText(3, _translate("MainWindow", "png"))
+        self.graphType.setItemText(2, _translate("MainWindow", "Интерференция"))
+        self.graphType.setItemText(3, _translate("MainWindow", "Фильтрованная интерференция"))
+        self.buildButton.setText(_translate("MainWindow", "Построить"))
+        self.menu.setTitle(_translate("MainWindow", "Файл"))
+        self.newButton.setText(_translate("MainWindow", "Новый"))
+        self.openButton.setText(_translate("MainWindow", "Открыть"))
         self.saveButton.setText(_translate("MainWindow", "Сохранить"))
 
     def add_functions(self):
         """Добавление функционала к элементам интерфейса"""
-        self.openButton.clicked.connect(self.open_file)
+        self.newButton.triggered.connect(self.new_file)
+        self.buildButton.clicked.connect(self.draw_graph)
+        self.saveButton.triggered.connect(self.save_file)
+        # self.buildButton.clicked.connect()
 
     @staticmethod
     def show_error():
@@ -179,31 +185,47 @@ class Ui_MainWindow(object):
         # Считывание параметров из элементов графического интерфейса и преобразование их в числа
         float_parameters = [self.str2float(i) for i in [total_time, speed, lambda_source, source_bandwith, delta_n,
                                                         ADC_frequency, phase_modulation_frequency]]
-        if all(float_parameters):  # Если все параметры введены правильно
+        if all([not (parameter is None) for parameter in float_parameters]):  # Если все параметры введены правильно
             # Создание объектов класса "сигнал"
             self.signals = [Signal.Signal(np.fromfile(i), *float_parameters, name=i.split('/')[-1],
                                           pen=pen) for i, pen in zip(filenames, pens)]
 
-    def open_file(self):
+    def new_file(self):
         """Открытие файлов и дальнейшая их обработка"""
-        self.filenames, _ = QFileDialog.getOpenFileNames()  # Открытие фпйлов
+        print('Открытие файлов:')
+        self.filenames, _ = QFileDialog.getOpenFileNames()  # Открытие файлов
+        [print(filename) for filename in self.filenames]
+        print()
         if self.filenames:  # Если список файлов не пустой
             n = len(self.filenames)
             colors = pg.colormap.get('CET-C1').color
             l = len(colors)
             k = l // n
+            print('Подбор набора цветов для будущих графиков')
             # Подбор набора цветов для будущих графиков
             pens = [[round(255 * r), round(255 * g), round(256 * b)] for r, g, b, a in colors[::k]]
             # Создание объектов класса "сигнал"
-            self.set_signals(self.filenames, self.total_time.text(), self.speed.text(), self.lambda_source.text(),
-                             self.source_bandwith.text(), self.delta_n.text(), self.ADC_frequency.text(),
-                             self.phase_modulation_frequency.text(), pens)
+            print('Создание объектов класса "сигнал"')
+            self.set_signals(
+                filenames=self.filenames,
+                total_time=self.total_time.text(),
+                speed=self.speed.text(),
+                lambda_source=self.lambda_source.text(),
+                source_bandwith=self.source_bandwith.text(),
+                delta_n=self.delta_n.text(),
+                ADC_frequency=self.ADC_frequency.text(),
+                phase_modulation_frequency=self.phase_modulation_frequency.text(),
+                pens=pens
+            )
+
         if self.signals:  # Если сигналы существуют
             self.draw_graph()  # Построить график
 
     def draw_graph(self):
         """Построение графиков"""
+        print('Построение графиков')
         key = self.graphType.currentText()  # Создание ключа - название графика, который необходимо построить
+        print(f'Выбранный график - {key}')
         # В зависимости от ключа будет создан словарь, который будет задавать дальнейшие ключи для построения графиков
         chart_dict = {
             'Видность': {
@@ -228,8 +250,8 @@ class Ui_MainWindow(object):
             # Задаем названия осей и единицы измерения
             plt.setLabel('bottom', chart_dict['x_axis_name'], chart_dict['x_axis_unit'])
             plt.setLabel('left', chart_dict['y_axis_name'], chart_dict['y_axis_unit'])
-            plt.enableAutoRange('y', 1)  # Автоматический зум 1:1
-            plt.enableAutoRange('x', 1)
+            plt.enableAutoRange('y', True)  # Автоматический зум 1:1
+            plt.enableAutoRange('x', True)
             plt.plotItem.getViewBox().setMouseMode(pg.ViewBox.RectMode)  # Настройка режима работы мыши
         for signal in self.signals:  # Для каждого сигнала в списке сигналов
             x, y = {
@@ -237,6 +259,7 @@ class Ui_MainWindow(object):
                 'h-параметр': (signal.h_parameter_coordinates, signal.h_parameter)
             }[key]  # Задаем значения по обеим координатам
             name, pen = signal.name, signal.pen  # Задаем имя и цвет графика
+            print(f'Построение графика "{key}": {name}')
             for plt in [self.graph_widget, self.graph_widget_zoom]:  # Для каждого виджета
                 # Строим графики
                 plt.plot(x, y, name=name, pen=pen)
@@ -256,6 +279,16 @@ class Ui_MainWindow(object):
         lr.sigRegionChanged.connect(updatePlot)
         self.graph_widget_zoom.sigXRangeChanged.connect(updateRegion)
         updatePlot()
+
+    def save_file(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        filename, _ = QFileDialog.getSaveFileName(
+            parent=None, caption="Сохранить", directory="default",
+            filter="(*.json);;(*.txt);;(*.mat);;(*.csv);;(*.png)", options=options
+        )
+        if filename:
+            print(filename)
 
 
 if __name__ == "__main__":

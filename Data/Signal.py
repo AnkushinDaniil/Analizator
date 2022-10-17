@@ -41,17 +41,25 @@ class Signal:
     def set_signal(self, interference: np.ndarray, speed: float, total_time: float, lambda_source: float,
                    source_bandwith: float, delta_n: float, name: str, pen):
         n = np.size(interference)
-
+        print()
+        print(name)
         self.interference = interference
         self.speed = speed / 1000
+        print(f'Скорость движения подвижки = {self.speed} м/с')
         self.total_time = total_time
+        print(f'Время движения подвижки = {self.total_time} с')
         self.lambda_source = lambda_source / 10 ** 9
+        print(f'Цетральная длина волны источника = {self.lambda_source} м')
         self.source_bandwith = source_bandwith / 10 ** 9
+        print(f'Ширина полосы источника = {self.source_bandwith} м')
         self.delta_n = delta_n
+        print(f'Разница показателей преломления = {self.delta_n}')
         self.name = name
         self.pen = pen
+        print(f'Цвет = {self.pen}')
 
         self.n_to_length = self.total_time * self.speed / n
+        print(f'Коэффициент перевода из единиц в длину = {self.n_to_length}')
         self.interference_coordinates = np.arange(0, n, 1, dtype=float) * self.n_to_length
         self.interference_coordinates = self.__set_0(
             self.interference_coordinates, self.interference
@@ -73,6 +81,8 @@ class Signal:
         self.h_parameter_coordinates, self.h_parameter, self.beat_length, self.depolarization_length=  \
             self.__calculate_h_param(self.visibility_coordinates, self.visibility, self.lambda_source, self.delta_n,
                                      self.source_bandwith)
+        print(f'Длина биений = {self.beat_length} м')
+        print(f'Длина деполяризации = {self.depolarization_length} м')
 
 
 
