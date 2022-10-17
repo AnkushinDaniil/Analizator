@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1013</width>
+    <width>1050</width>
     <height>735</height>
    </rect>
   </property>
@@ -28,7 +28,7 @@
        </widget>
       </item>
       <item>
-       <widget class="PlotWidget" name="graph_widget_3" native="true">
+       <widget class="PlotWidget" name="graph_widget_zoom" native="true">
         <property name="minimumSize">
          <size>
           <width>600</width>
@@ -144,6 +144,20 @@
        </layout>
       </item>
       <item>
+       <widget class="QComboBox" name="graphType">
+        <item>
+         <property name="text">
+          <string>h-параметр</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Видность</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="openButton">
         <property name="text">
          <string>Выбрать файл и построить</string>
@@ -151,7 +165,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="comboBox">
+       <widget class="QComboBox" name="exportFile">
         <item>
          <property name="text">
           <string>mat</string>
@@ -175,7 +189,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QPushButton" name="saveButton">
         <property name="text">
          <string>Сохранить</string>
         </property>
@@ -190,8 +204,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1013</width>
-     <height>21</height>
+     <width>1050</width>
+     <height>26</height>
     </rect>
    </property>
   </widget>
