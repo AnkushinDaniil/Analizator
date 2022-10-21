@@ -274,10 +274,8 @@ class Ui_MainWindow(object):
         """Построение графиков"""
         if self.signals:
             print('Построение графиков')
-            current_type = self.graphType.currentText()
-            if self.key != current_type:
-                self.clear_graph()
-                self.key = current_type  # Создание ключа - название графика, который необходимо построить
+            self.clear_graph()
+            self.key = self.graphType.currentText()  # Создание ключа - название графика, который необходимо построить
             print(f'Выбранный график - {self.key}')
             # В зависимости от ключа будет создан словарь, который будет задавать дальнейшие ключи для построения графиков
             chart_dict = {
@@ -296,14 +294,14 @@ class Ui_MainWindow(object):
                 'Интерференция': {
                     'x_axis_name': 'Длина плеча интерферометра',
                     'x_axis_unit': 'м',
-                    'y_axis_name': 'Мощность, относительные единицы',
-                    'y_axis_unit': 'дБ'
+                    'y_axis_name': 'Мощность',
+                    'y_axis_unit': 'Относительные единицы'
                 },
                 'Фильтрованная интерференция': {
                     'x_axis_name': 'Длина плеча интерферометра',
                     'x_axis_unit': 'м',
-                    'y_axis_name': 'Мощность, относительные единицы',
-                    'y_axis_unit': 'дБ'
+                    'y_axis_name': 'Мощность',
+                    'y_axis_unit': 'Относительные единицы'
                 }
             }[self.key]
 

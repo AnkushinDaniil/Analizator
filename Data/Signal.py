@@ -1,6 +1,6 @@
 import numpy as np
 from pyqtgraph import colormap
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks, freqs, cheby2, sosfilt, cheb2ord
 
 
 class Signal:
@@ -65,10 +65,9 @@ class Signal:
         self.interference_coordinates = self.__set_0(
             self.interference_coordinates, self.interference
         )
-        self.denoised_interference_coordinates, self.denoised_interference = \
-            self.__remove_noise(self.interference, self.interference_coordinates)
+        self.denoised_interference = self.__remove_noise(self.interference, self.ADC_frequency)
         self.denoised_interference_coordinates = self.__set_0(
-            self.denoised_interference_coordinates, self.denoised_interference
+            self.interference_coordinates, self.denoised_interference
         )
         self.periodicity_of_the_interference_pattern = \
             self.__calculate_interference_pattern_periodicity(self.denoised_interference)
@@ -99,22 +98,40 @@ class Signal:
         return x_axes
 
     @staticmethod
-    def __remove_noise(interference: np.ndarray, interference_coordinates: np.ndarray):
-        windowSize = np.size(interference) / 100000
-        window = np.hanning(windowSize)
-        window = window / window.sum()
+    def __remove_noise(interference: np.ndarray, ADC_frequency: float):
+        # windowSize = np.size(interference) / 100000
+        # window = np.hanning(windowSize)
+        # window = window / window.sum()
+        #
+        # # filter the data using convolution
+        # denoised_interference = np.convolve(window, interference, mode='valid')
+        # denoised_interference_coordinates = interference_coordinates[:denoised_interference.shape[0]]
+        Fs = ADC_frequency  # Sampling frequency in Hz
+        fp = 2600  # Pass band frequency in Hz
+        fs = 6000  # Stop band frequency in Hz
+        Ap = 1  # Pass band ripple in dB
+        As = 100  # Stop band attenuation in dB
+        # Compute pass band and stop band edge frequencies
 
-        # filter the data using convolution
-        denoised_interference = np.convolve(window, interference, mode='valid')
-        denoised_interference_coordinates = interference_coordinates[:denoised_interference.shape[0]]
+        # Normalized passband edge
+        # frequencies w.r.t. Nyquist rate
+        wp = fp / (Fs / 2)
 
-        return denoised_interference_coordinates, denoised_interference
+        # Normalized stopband
+        # edge frequencies
+        ws = fs / (Fs / 2)
+        N, wc = cheb2ord(wp, ws, Ap, As)
+        sos = cheby2(N=N, rs=As, Wn=wc, btype='highpass', fs=Fs, output='sos')
+        denoised_interference = sosfilt(sos, interference)
+
+        return denoised_interference
 
     @staticmethod
     def __calculate_interference_pattern_periodicity(denoised_interference: np.ndarray):
         top_values = denoised_interference[denoised_interference > np.quantile(denoised_interference, 0.9999)]
         peaks, _ = find_peaks(top_values)
-        return int(top_values.shape[0] / peaks.shape[0] * 10)
+        # return int(top_values.shape[0] / peaks.shape[0] * 10)
+        return 500
 
     @staticmethod
     def __calculate_visibility(x: np.ndarray, y: np.ndarray, span: float):
