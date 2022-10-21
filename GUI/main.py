@@ -5,14 +5,19 @@
 # ООО "Анализ оптических систем"
 # email ankushin.daniil42@gmail.com
 # -----------------------------------------------------------
+import csv
+import os
+import pickle
 
 import numpy as np
+import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget
+import json
 from Data import Signal
 
 pg.setConfigOptions(antialias=True)
@@ -187,7 +192,7 @@ class Ui_MainWindow(object):
                                                         ADC_frequency, phase_modulation_frequency]]
         if all([not (parameter is None) for parameter in float_parameters]):  # Если все параметры введены правильно
             # Создание объектов класса "сигнал"
-            self.signals = [Signal.Signal(np.fromfile(i), *float_parameters, name=i.split('/')[-1],
+            self.signals = [Signal.Signal(np.fromfile(i), *float_parameters, name=i.split('/')[-1].split('.')[0],
                                           pen=pen) for i, pen in zip(filenames, pens)]
 
     def new_file(self):
@@ -218,7 +223,8 @@ class Ui_MainWindow(object):
                 pens=pens
             )
 
-        if self.signals:  # Если сигналы существуют
+        if self.signals:
+            # Если сигналы существуют
             self.draw_graph()  # Построить график
 
     def draw_graph(self):
@@ -239,6 +245,18 @@ class Ui_MainWindow(object):
                 'x_axis_unit': 'м',
                 'y_axis_name': 'h-параметр',
                 'y_axis_unit': 'дБ'
+            },
+            'Интерференция': {
+                'x_axis_name': 'Длина плеча интерферометра',
+                'x_axis_unit': 'м',
+                'y_axis_name': 'Мощность, относительные единицы',
+                'y_axis_unit': 'дБ'
+            },
+            'Фильтрованная интерференция': {
+                'x_axis_name': 'Длина плеча интерферометра',
+                'x_axis_unit': 'м',
+                'y_axis_name': 'Мощность, относительные единицы',
+                'y_axis_unit': 'дБ'
             }
         }[key]
 
@@ -250,22 +268,25 @@ class Ui_MainWindow(object):
             # Задаем названия осей и единицы измерения
             plt.setLabel('bottom', chart_dict['x_axis_name'], chart_dict['x_axis_unit'])
             plt.setLabel('left', chart_dict['y_axis_name'], chart_dict['y_axis_unit'])
-            plt.enableAutoRange('y', True)  # Автоматический зум 1:1
-            plt.enableAutoRange('x', True)
             plt.plotItem.getViewBox().setMouseMode(pg.ViewBox.RectMode)  # Настройка режима работы мыши
         for signal in self.signals:  # Для каждого сигнала в списке сигналов
             x, y = {
                 'Видность': (signal.visibility_coordinates, signal.visibility),
-                'h-параметр': (signal.h_parameter_coordinates, signal.h_parameter)
+                'h-параметр': (signal.h_parameter_coordinates, signal.h_parameter),
+                'Интерференция': (signal.interference_coordinates, signal.interference),
+                'Фильтрованная интерференция': (signal.denoised_interference_coordinates, signal.denoised_interference)
             }[key]  # Задаем значения по обеим координатам
             name, pen = signal.name, signal.pen  # Задаем имя и цвет графика
             print(f'Построение графика "{key}": {name}')
             for plt in [self.graph_widget, self.graph_widget_zoom]:  # Для каждого виджета
                 # Строим графики
                 plt.plot(x, y, name=name, pen=pen)
+        for plt in [self.graph_widget, self.graph_widget_zoom]:
+            plt.enableAutoRange('y', True)  # Автоматический зум 1:1
+            plt.enableAutoRange('x', True)
         # Привязка зума между графиками
         lr = pg.LinearRegionItem()
-        lr.setZValue(-10)
+        lr.setRegion((0, self.signals[0].beat_length))
         self.graph_widget.addItem(lr)
 
         def updatePlot():
@@ -281,14 +302,41 @@ class Ui_MainWindow(object):
         updatePlot()
 
     def save_file(self):
+        directory = '_'.join([signal.name for signal in self.signals])
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        filename, _ = QFileDialog.getSaveFileName(
-            parent=None, caption="Сохранить", directory="default",
-            filter="(*.json);;(*.txt);;(*.mat);;(*.csv);;(*.png)", options=options
+        filename, extension = QFileDialog.getSaveFileName(
+            parent=None, caption="Сохранить", directory=directory,
+            filter=".json;;txt;;.pkl;;.mat;;.csv;;.png", options=options
         )
-        if filename:
-            print(filename)
+
+        def sig2dict(sig_list: list):
+            for sig in sig_list:
+                sig_dict = {
+                    sig.name: sig.__dict__
+                }
+            return sig_dict
+
+        if not ((filename is None) | (extension is None)):
+            signal_dict = sig2dict(self.signals)
+            if extension == '.csv':
+                if not os.path.exists(directory):
+                    os.mkdir(directory)
+                for name, signal in signal_dict.items():
+                    df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in signal.items()]))
+                    path = os.path.join(directory, name)
+                    df.to_csv(f"{path}{extension}", index=False)
+            else:
+                with open(f"{directory}{extension}", "w") as file:
+                    if extension == '.json':
+                        signal_json = json.dumps(signal_dict)
+                        file.write(signal_json)
+                    elif extension == '.txt':
+                        file.write(str(signal_dict))
+                    elif extension == '.pkl':
+                        pickle.dump(signal_dict, file)
+
+
 
 
 if __name__ == "__main__":
