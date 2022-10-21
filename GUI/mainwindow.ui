@@ -14,7 +14,7 @@
    <string>Analizator</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="5,2">
+   <layout class="QHBoxLayout" name="horizontalLayout" stretch="5,2">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_4" stretch="0,0">
       <property name="sizeConstraint">
@@ -43,7 +43,7 @@
      </layout>
     </item>
     <item>
-     <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
+     <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <layout class="QFormLayout" name="formLayout">
         <item row="0" column="0">
@@ -189,8 +189,42 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout">
-        <item>
+       <layout class="QGridLayout" name="gridLayout">
+        <item row="0" column="0" colspan="2">
+         <widget class="QPushButton" name="clear_dataButton">
+          <property name="text">
+           <string>Очистить данные</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="color_resetButton">
+          <property name="text">
+           <string>Перезагрузка цветов</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="clear_graphButton">
+          <property name="text">
+           <string>Очистить график</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="buildButton">
+          <property name="maximumSize">
+           <size>
+            <width>150</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Построить</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0">
          <widget class="QComboBox" name="graphType">
           <property name="maximumSize">
            <size>
@@ -218,19 +252,6 @@
             <string>Фильтрованная интерференция</string>
            </property>
           </item>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="buildButton">
-          <property name="maximumSize">
-           <size>
-            <width>150</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Построить</string>
-          </property>
          </widget>
         </item>
        </layout>

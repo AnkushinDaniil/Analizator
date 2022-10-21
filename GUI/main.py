@@ -18,6 +18,7 @@ from PyQt5.QtGui import QPalette, QColor
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget
 import json
+from scipy.io import savemat, loadmat
 
 from Data.Signal import Signal
 
@@ -28,6 +29,7 @@ class Ui_MainWindow(object):
     """Графический интерфейс главного окна"""
 
     def __init__(self):
+        self.key = None
         self.signals = []
         self.filenames = None
 
@@ -36,8 +38,8 @@ class Ui_MainWindow(object):
         MainWindow.resize(1300, 735)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.centralwidget)
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
+        self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -49,7 +51,7 @@ class Ui_MainWindow(object):
         self.graph_widget_zoom.setMinimumSize(QtCore.QSize(900, 300))
         self.graph_widget_zoom.setObjectName("graph_widget_zoom")
         self.verticalLayout_4.addWidget(self.graph_widget_zoom)
-        self.horizontalLayout_2.addLayout(self.verticalLayout_4)
+        self.horizontalLayout.addLayout(self.verticalLayout_4)
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtWidgets.QFormLayout()
@@ -104,8 +106,21 @@ class Ui_MainWindow(object):
         self.phase_modulation_frequency.setObjectName("phase_modulation_frequency")
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.phase_modulation_frequency)
         self.verticalLayout.addLayout(self.formLayout)
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.gridLayout = QtWidgets.QGridLayout()
+        self.gridLayout.setObjectName("gridLayout")
+        self.clear_dataButton = QtWidgets.QPushButton(self.centralwidget)
+        self.clear_dataButton.setObjectName("clear_dataButton")
+        self.gridLayout.addWidget(self.clear_dataButton, 0, 0, 1, 2)
+        self.color_resetButton = QtWidgets.QPushButton(self.centralwidget)
+        self.color_resetButton.setObjectName("color_resetButton")
+        self.gridLayout.addWidget(self.color_resetButton, 1, 0, 1, 1)
+        self.clear_graphButton = QtWidgets.QPushButton(self.centralwidget)
+        self.clear_graphButton.setObjectName("clear_graphButton")
+        self.gridLayout.addWidget(self.clear_graphButton, 1, 1, 1, 1)
+        self.buildButton = QtWidgets.QPushButton(self.centralwidget)
+        self.buildButton.setMaximumSize(QtCore.QSize(150, 16777215))
+        self.buildButton.setObjectName("buildButton")
+        self.gridLayout.addWidget(self.buildButton, 2, 1, 1, 1)
         self.graphType = QtWidgets.QComboBox(self.centralwidget)
         self.graphType.setMaximumSize(QtCore.QSize(150, 16777215))
         self.graphType.setObjectName("graphType")
@@ -113,15 +128,11 @@ class Ui_MainWindow(object):
         self.graphType.addItem("")
         self.graphType.addItem("")
         self.graphType.addItem("")
-        self.horizontalLayout.addWidget(self.graphType)
-        self.buildButton = QtWidgets.QPushButton(self.centralwidget)
-        self.buildButton.setMaximumSize(QtCore.QSize(150, 16777215))
-        self.buildButton.setObjectName("buildButton")
-        self.horizontalLayout.addWidget(self.buildButton)
-        self.verticalLayout.addLayout(self.horizontalLayout)
-        self.horizontalLayout_2.addLayout(self.verticalLayout)
-        self.horizontalLayout_2.setStretch(0, 5)
-        self.horizontalLayout_2.setStretch(1, 2)
+        self.gridLayout.addWidget(self.graphType, 2, 0, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout)
+        self.horizontalLayout.addLayout(self.verticalLayout)
+        self.horizontalLayout.setStretch(0, 5)
+        self.horizontalLayout.setStretch(1, 2)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1300, 21))
@@ -166,11 +177,14 @@ class Ui_MainWindow(object):
         self.ADC_frequency.setText(_translate("MainWindow", "500000"))
         self.label_7.setText(_translate("MainWindow", "Частота фазовой модуляции, Гц"))
         self.phase_modulation_frequency.setText(_translate("MainWindow", "0"))
+        self.clear_dataButton.setText(_translate("MainWindow", "Очистить данные"))
+        self.color_resetButton.setText(_translate("MainWindow", "Перезагрузка цветов"))
+        self.clear_graphButton.setText(_translate("MainWindow", "Очистить график"))
+        self.buildButton.setText(_translate("MainWindow", "Построить"))
         self.graphType.setItemText(0, _translate("MainWindow", "h-параметр"))
         self.graphType.setItemText(1, _translate("MainWindow", "Видность"))
         self.graphType.setItemText(2, _translate("MainWindow", "Интерференция"))
         self.graphType.setItemText(3, _translate("MainWindow", "Фильтрованная интерференция"))
-        self.buildButton.setText(_translate("MainWindow", "Построить"))
         self.menu.setTitle(_translate("MainWindow", "Файл"))
         self.newButton.setText(_translate("MainWindow", "Новый"))
         self.openButton.setText(_translate("MainWindow", "Открыть"))
@@ -182,6 +196,9 @@ class Ui_MainWindow(object):
         self.buildButton.clicked.connect(self.draw_graph)
         self.saveButton.triggered.connect(self.save_file)
         self.openButton.triggered.connect(self.open_file)
+        self.clear_graphButton.clicked.connect(self.clear_graph)
+        self.color_resetButton.clicked.connect(self.color_reset)
+        self.clear_dataButton.clicked.connect(self.clear_data)
 
     @staticmethod
     def show_error():
@@ -224,6 +241,7 @@ class Ui_MainWindow(object):
                     pen=pen
                 )
                 self.signals.append(signal)
+        self.saveButton.setEnabled(True)
 
     def new_file(self):
         """Открытие файлов и дальнейшая их обработка"""
@@ -232,13 +250,7 @@ class Ui_MainWindow(object):
         [print(filename) for filename in self.filenames]
         print()
         if self.filenames:  # Если список файлов не пустой
-            n = len(self.filenames)
-            colors = pg.colormap.get('CET-C1').color
-            l = len(colors)
-            k = l // n
-            print('Подбор набора цветов для будущих графиков')
-            # Подбор набора цветов для будущих графиков
-            pens = [[round(255 * r), round(255 * g), round(256 * b)] for r, g, b, a in colors[::k]]
+            pens = self.generate_pens(len(self.filenames))
             # Создание объектов класса "сигнал"
             print('Создание объектов класса "сигнал"')
             self.set_signals(
@@ -262,8 +274,11 @@ class Ui_MainWindow(object):
         """Построение графиков"""
         if self.signals:
             print('Построение графиков')
-            key = self.graphType.currentText()  # Создание ключа - название графика, который необходимо построить
-            print(f'Выбранный график - {key}')
+            current_type = self.graphType.currentText()
+            if self.key != current_type:
+                self.clear_graph()
+                self.key = current_type  # Создание ключа - название графика, который необходимо построить
+            print(f'Выбранный график - {self.key}')
             # В зависимости от ключа будет создан словарь, который будет задавать дальнейшие ключи для построения графиков
             chart_dict = {
                 'Видность': {
@@ -290,13 +305,12 @@ class Ui_MainWindow(object):
                     'y_axis_name': 'Мощность, относительные единицы',
                     'y_axis_unit': 'дБ'
                 }
-            }[key]
+            }[self.key]
 
             for plt in [self.graph_widget, self.graph_widget_zoom]:  # Строим графики в обоих виджетах
-                plt.clear()  # Очищаем виджеты от предыдущих графиков
                 plt.addLegend()
                 # В зависимости от типа графика задается линейная или логарифмическая шкала
-                plt.setLogMode(False, (False, True)[key == 'Видность'])
+                plt.setLogMode(False, (False, True)[self.key == 'Видность'])
                 # Задаем названия осей и единицы измерения
                 plt.setLabel('bottom', chart_dict['x_axis_name'], chart_dict['x_axis_unit'])
                 plt.setLabel('left', chart_dict['y_axis_name'], chart_dict['y_axis_unit'])
@@ -306,10 +320,11 @@ class Ui_MainWindow(object):
                     'Видность': (signal.visibility_coordinates, signal.visibility),
                     'h-параметр': (signal.h_parameter_coordinates, signal.h_parameter),
                     'Интерференция': (signal.interference_coordinates, signal.interference),
-                    'Фильтрованная интерференция': (signal.denoised_interference_coordinates, signal.denoised_interference)
-                }[key]  # Задаем значения по обеим координатам
+                    'Фильтрованная интерференция': (
+                    signal.denoised_interference_coordinates, signal.denoised_interference)
+                }[self.key]  # Задаем значения по обеим координатам
                 name, pen = signal.name, signal.pen  # Задаем имя и цвет графика
-                print(f'Построение графика "{key}": {name}')
+                print(f'Построение графика "{self.key}": {name}')
                 for plt in [self.graph_widget, self.graph_widget_zoom]:  # Для каждого виджета
                     # Строим графики
                     plt.plot(x, y, name=name, pen=pen)
@@ -332,6 +347,34 @@ class Ui_MainWindow(object):
             lr.sigRegionChanged.connect(updatePlot)
             self.graph_widget_zoom.sigXRangeChanged.connect(updateRegion)
             updatePlot()
+
+    def clear_graph(self):
+        for plt in [self.graph_widget, self.graph_widget_zoom]:
+            plt.clear()
+
+    def color_reset(self):
+        if self.signals:
+            pens = self.generate_pens(len(self.signals))
+            for signal, pen in zip(self.signals, pens):
+                signal.pen = pen
+            self.clear_graph()
+            self.draw_graph()
+
+    @staticmethod
+    def generate_pens(n: int):
+        colors = pg.colormap.get('CET-C1').color
+        l = len(colors)
+        k = l // n
+        print('Подбор набора цветов для графиков')
+        # Подбор набора цветов для графиков
+        pens = [[round(255 * r), round(255 * g), round(256 * b)] for r, g, b, a in colors[::k]]
+        return pens
+
+    def clear_data(self):
+        self.signals = []
+        self.clear_graph()
+
+
 
     def save_file(self):
         """Экспорт файлов"""
@@ -366,6 +409,16 @@ class Ui_MainWindow(object):
                     df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in signal.items()]))
                     path = os.path.join(directory, name)
                     df.to_csv(f"{path}{extension}", index=False)
+            elif extension == '.mat':
+                short_keys_signal_dict = dict()
+                for name, sig_dict in signal_dict.items():
+                    short_name = name[:31]
+                    short_keys_signal_dict[short_name] = dict()
+                    for key, value in sig_dict.items():
+                        short_key = key[:31]
+                        if value:
+                            short_keys_signal_dict[short_name][short_key] = value
+                savemat(f"{directory}{extension}", short_keys_signal_dict)
             elif extension == '.pkl':
                 with open(f"{directory}{extension}", "wb") as file:
                     pickle.dump(signal_dict, file)
@@ -393,7 +446,7 @@ class Ui_MainWindow(object):
                             signal = Signal()
                             signal.read_signal(signal_dict=item)
                             self.signals.append(signal)
-
+        self.saveButton.setEnabled(True)
         self.draw_graph()
 
 
