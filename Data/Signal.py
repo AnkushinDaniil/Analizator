@@ -3,7 +3,6 @@ from pyqtgraph import colormap
 from scipy.signal import find_peaks
 
 
-
 class Signal:
     """Signal(signal: np.ndarray, speed: float, total_time: float, lambda_source: float,
               source_bandwith: float, delta_n: float, ADC_frequency: float, phase_modulation_frequency: float,
@@ -12,9 +11,7 @@ class Signal:
         Класс "сигнал" представляет собой набор полей, соответствующих параметрам сигнала,
         и функций для их вычисления"""
 
-    def __init__(self, interference: np.ndarray, speed: float, total_time: float, lambda_source: float,
-                 source_bandwith: float, delta_n: float, ADC_frequency: float, phase_modulation_frequency: float,
-                 name: str, pen):
+    def __init__(self):
         self.ADC_frequency = None  # Частота АЦП
         self.beat_length = None  # Длина биений
         self.delta_n = None  # Разница показателей преломления
@@ -36,14 +33,17 @@ class Signal:
         self.total_time = None  # Время движения подвижки, с
         self.visibility = None  # Видность
         self.visibility_coordinates = None  # Координаты для графика видности
-        # Создание объекта класса "сигнал"
-        self.set_signal(interference, speed, total_time, lambda_source, source_bandwith, delta_n, name, pen)
 
     def set_signal(self, interference: np.ndarray, speed: float, total_time: float, lambda_source: float,
-                   source_bandwith: float, delta_n: float, name: str, pen):
+                   source_bandwith: float, delta_n: float, ADC_frequency: float, phase_modulation_frequency: float,
+                   name: str, pen):
         n = np.size(interference)
         print()
         print(name)
+        self.ADC_frequency = ADC_frequency
+        print(f'Частота АЦП = {self.ADC_frequency} Гц')
+        self.phase_modulation_frequency = phase_modulation_frequency
+        print(f'Частота фазовой модуляции = {self.phase_modulation_frequency} Гц')
         self.interference = interference
         self.speed = speed / 1000
         print(f'Скорость движения подвижки = {self.speed} м/с')
@@ -80,14 +80,16 @@ class Signal:
             self.visibility_coordinates, self.visibility
         )
 
-        self.h_parameter_coordinates, self.h_parameter, self.beat_length, self.depolarization_length =  \
+        self.h_parameter_coordinates, self.h_parameter, self.beat_length, self.depolarization_length = \
             self.__calculate_h_param(self.visibility_coordinates, self.visibility, self.lambda_source, self.delta_n,
                                      self.source_bandwith)
         print(f'Длина биений = {self.beat_length} м')
         print(f'Длина деполяризации = {self.depolarization_length} м')
         self.visibility_after_BD_compensation = self.__BD_compensation(self.visibility)
 
-
+    def read_signal(self, signal_dict: dict):
+        for key in self.__dict__.keys():
+            setattr(self, key, signal_dict.get(key, None))
 
 
     @staticmethod
@@ -95,7 +97,6 @@ class Signal:
         i = np.where(y_axes == np.max(y_axes))
         x_axes = x_axes - x_axes[i[0][0]]
         return x_axes
-
 
     @staticmethod
     def __remove_noise(interference: np.ndarray, interference_coordinates: np.ndarray):

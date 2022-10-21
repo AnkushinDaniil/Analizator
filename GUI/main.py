@@ -18,7 +18,8 @@ from PyQt5.QtGui import QPalette, QColor
 import pyqtgraph as pg
 from pyqtgraph import PlotWidget
 import json
-from Data import Signal
+
+from Data.Signal import Signal
 
 pg.setConfigOptions(antialias=True)
 
@@ -27,27 +28,28 @@ class Ui_MainWindow(object):
     """Графический интерфейс главного окна"""
 
     def __init__(self):
-        self.signals = None
+        self.signals = []
         self.filenames = None
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1050, 735)
+        MainWindow.resize(1300, 735)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
-        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.centralwidget)
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
+        self.verticalLayout_4.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
         self.graph_widget = PlotWidget(self.centralwidget)
-        self.graph_widget.setMinimumSize(QtCore.QSize(600, 300))
+        self.graph_widget.setMinimumSize(QtCore.QSize(900, 300))
         self.graph_widget.setObjectName("graph_widget")
         self.verticalLayout_4.addWidget(self.graph_widget)
         self.graph_widget_zoom = PlotWidget(self.centralwidget)
-        self.graph_widget_zoom.setMinimumSize(QtCore.QSize(600, 300))
+        self.graph_widget_zoom.setMinimumSize(QtCore.QSize(900, 300))
         self.graph_widget_zoom.setObjectName("graph_widget_zoom")
         self.verticalLayout_4.addWidget(self.graph_widget_zoom)
-        self.horizontalLayout.addLayout(self.verticalLayout_4)
+        self.horizontalLayout_2.addLayout(self.verticalLayout_4)
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtWidgets.QFormLayout()
@@ -56,59 +58,73 @@ class Ui_MainWindow(object):
         self.label.setObjectName("label")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
         self.total_time = QtWidgets.QLineEdit(self.centralwidget)
+        self.total_time.setMaximumSize(QtCore.QSize(100, 16777215))
         self.total_time.setObjectName("total_time")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.total_time)
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
         self.label_2.setObjectName("label_2")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_2)
         self.speed = QtWidgets.QLineEdit(self.centralwidget)
+        self.speed.setMaximumSize(QtCore.QSize(100, 16777215))
         self.speed.setObjectName("speed")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.speed)
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
         self.label_3.setObjectName("label_3")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_3)
         self.lambda_source = QtWidgets.QLineEdit(self.centralwidget)
+        self.lambda_source.setMaximumSize(QtCore.QSize(100, 16777215))
         self.lambda_source.setObjectName("lambda_source")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.lambda_source)
         self.label_4 = QtWidgets.QLabel(self.centralwidget)
         self.label_4.setObjectName("label_4")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.label_4)
         self.source_bandwith = QtWidgets.QLineEdit(self.centralwidget)
+        self.source_bandwith.setMaximumSize(QtCore.QSize(100, 16777215))
         self.source_bandwith.setObjectName("source_bandwith")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.source_bandwith)
         self.label_5 = QtWidgets.QLabel(self.centralwidget)
         self.label_5.setObjectName("label_5")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.label_5)
         self.delta_n = QtWidgets.QLineEdit(self.centralwidget)
+        self.delta_n.setMaximumSize(QtCore.QSize(100, 16777215))
         self.delta_n.setObjectName("delta_n")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.delta_n)
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
         self.label_6.setObjectName("label_6")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.label_6)
         self.ADC_frequency = QtWidgets.QLineEdit(self.centralwidget)
+        self.ADC_frequency.setMaximumSize(QtCore.QSize(100, 16777215))
         self.ADC_frequency.setObjectName("ADC_frequency")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.ADC_frequency)
         self.label_7 = QtWidgets.QLabel(self.centralwidget)
         self.label_7.setObjectName("label_7")
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.label_7)
         self.phase_modulation_frequency = QtWidgets.QLineEdit(self.centralwidget)
+        self.phase_modulation_frequency.setMaximumSize(QtCore.QSize(100, 16777215))
         self.phase_modulation_frequency.setObjectName("phase_modulation_frequency")
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.phase_modulation_frequency)
         self.verticalLayout.addLayout(self.formLayout)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setObjectName("horizontalLayout")
         self.graphType = QtWidgets.QComboBox(self.centralwidget)
+        self.graphType.setMaximumSize(QtCore.QSize(150, 16777215))
         self.graphType.setObjectName("graphType")
         self.graphType.addItem("")
         self.graphType.addItem("")
         self.graphType.addItem("")
         self.graphType.addItem("")
-        self.verticalLayout.addWidget(self.graphType)
+        self.horizontalLayout.addWidget(self.graphType)
         self.buildButton = QtWidgets.QPushButton(self.centralwidget)
+        self.buildButton.setMaximumSize(QtCore.QSize(150, 16777215))
         self.buildButton.setObjectName("buildButton")
-        self.verticalLayout.addWidget(self.buildButton)
-        self.horizontalLayout.addLayout(self.verticalLayout)
+        self.horizontalLayout.addWidget(self.buildButton)
+        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.horizontalLayout_2.addLayout(self.verticalLayout)
+        self.horizontalLayout_2.setStretch(0, 5)
+        self.horizontalLayout_2.setStretch(1, 2)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1050, 26))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 1300, 21))
         self.menubar.setObjectName("menubar")
         self.menu = QtWidgets.QMenu(self.menubar)
         self.menu.setObjectName("menu")
@@ -121,6 +137,7 @@ class Ui_MainWindow(object):
         self.openButton = QtWidgets.QAction(MainWindow)
         self.openButton.setObjectName("openButton")
         self.saveButton = QtWidgets.QAction(MainWindow)
+        self.saveButton.setEnabled(False)
         self.saveButton.setObjectName("saveButton")
         self.menu.addAction(self.newButton)
         self.menu.addAction(self.openButton)
@@ -147,7 +164,7 @@ class Ui_MainWindow(object):
         self.delta_n.setText(_translate("MainWindow", "0.0006086"))
         self.label_6.setText(_translate("MainWindow", "Частота АЦП, Гц"))
         self.ADC_frequency.setText(_translate("MainWindow", "500000"))
-        self.label_7.setText(_translate("MainWindow", "Частота фазовой модуляции"))
+        self.label_7.setText(_translate("MainWindow", "Частота фазовой модуляции, Гц"))
         self.phase_modulation_frequency.setText(_translate("MainWindow", "0"))
         self.graphType.setItemText(0, _translate("MainWindow", "h-параметр"))
         self.graphType.setItemText(1, _translate("MainWindow", "Видность"))
@@ -164,7 +181,7 @@ class Ui_MainWindow(object):
         self.newButton.triggered.connect(self.new_file)
         self.buildButton.clicked.connect(self.draw_graph)
         self.saveButton.triggered.connect(self.save_file)
-        # self.buildButton.clicked.connect()
+        self.openButton.triggered.connect(self.open_file)
 
     @staticmethod
     def show_error():
@@ -192,8 +209,21 @@ class Ui_MainWindow(object):
                                                         ADC_frequency, phase_modulation_frequency]]
         if all([not (parameter is None) for parameter in float_parameters]):  # Если все параметры введены правильно
             # Создание объектов класса "сигнал"
-            self.signals = [Signal.Signal(np.fromfile(i), *float_parameters, name=i.split('/')[-1].split('.')[0],
-                                          pen=pen) for i, pen in zip(filenames, pens)]
+            for i, pen in zip(filenames, pens):
+                signal = Signal()
+                signal.set_signal(
+                    interference=np.fromfile(i),
+                    speed=speed,
+                    total_time=total_time,
+                    lambda_source=lambda_source,
+                    source_bandwith=source_bandwith,
+                    delta_n=delta_n,
+                    ADC_frequency=ADC_frequency,
+                    phase_modulation_frequency=phase_modulation_frequency,
+                    name=i.split('/')[-1].split('.')[0],
+                    pen=pen
+                )
+                self.signals.append(signal)
 
     def new_file(self):
         """Открытие файлов и дальнейшая их обработка"""
@@ -213,15 +243,16 @@ class Ui_MainWindow(object):
             print('Создание объектов класса "сигнал"')
             self.set_signals(
                 filenames=self.filenames,
-                total_time=self.total_time.text(),
-                speed=self.speed.text(),
-                lambda_source=self.lambda_source.text(),
-                source_bandwith=self.source_bandwith.text(),
-                delta_n=self.delta_n.text(),
-                ADC_frequency=self.ADC_frequency.text(),
-                phase_modulation_frequency=self.phase_modulation_frequency.text(),
+                total_time=self.str2float(self.total_time.text()),
+                speed=self.str2float(self.speed.text()),
+                lambda_source=self.str2float(self.lambda_source.text()),
+                source_bandwith=self.str2float(self.source_bandwith.text()),
+                delta_n=self.str2float(self.delta_n.text()),
+                ADC_frequency=self.str2float(self.ADC_frequency.text()),
+                phase_modulation_frequency=self.str2float(self.phase_modulation_frequency.text()),
                 pens=pens
             )
+            self.newButton.setEnabled(True)
 
         if self.signals:
             # Если сигналы существуют
@@ -229,96 +260,105 @@ class Ui_MainWindow(object):
 
     def draw_graph(self):
         """Построение графиков"""
-        print('Построение графиков')
-        key = self.graphType.currentText()  # Создание ключа - название графика, который необходимо построить
-        print(f'Выбранный график - {key}')
-        # В зависимости от ключа будет создан словарь, который будет задавать дальнейшие ключи для построения графиков
-        chart_dict = {
-            'Видность': {
-                'x_axis_name': 'Длина плеча интерферометра',
-                'x_axis_unit': 'м',
-                'y_axis_name': 'Видность',
-                'y_axis_unit': ''
-            },
-            'h-параметр': {
-                'x_axis_name': 'Длина волокна',
-                'x_axis_unit': 'м',
-                'y_axis_name': 'h-параметр',
-                'y_axis_unit': 'дБ'
-            },
-            'Интерференция': {
-                'x_axis_name': 'Длина плеча интерферометра',
-                'x_axis_unit': 'м',
-                'y_axis_name': 'Мощность, относительные единицы',
-                'y_axis_unit': 'дБ'
-            },
-            'Фильтрованная интерференция': {
-                'x_axis_name': 'Длина плеча интерферометра',
-                'x_axis_unit': 'м',
-                'y_axis_name': 'Мощность, относительные единицы',
-                'y_axis_unit': 'дБ'
-            }
-        }[key]
+        if self.signals:
+            print('Построение графиков')
+            key = self.graphType.currentText()  # Создание ключа - название графика, который необходимо построить
+            print(f'Выбранный график - {key}')
+            # В зависимости от ключа будет создан словарь, который будет задавать дальнейшие ключи для построения графиков
+            chart_dict = {
+                'Видность': {
+                    'x_axis_name': 'Длина плеча интерферометра',
+                    'x_axis_unit': 'м',
+                    'y_axis_name': 'Видность',
+                    'y_axis_unit': ''
+                },
+                'h-параметр': {
+                    'x_axis_name': 'Длина волокна',
+                    'x_axis_unit': 'м',
+                    'y_axis_name': 'h-параметр',
+                    'y_axis_unit': 'дБ'
+                },
+                'Интерференция': {
+                    'x_axis_name': 'Длина плеча интерферометра',
+                    'x_axis_unit': 'м',
+                    'y_axis_name': 'Мощность, относительные единицы',
+                    'y_axis_unit': 'дБ'
+                },
+                'Фильтрованная интерференция': {
+                    'x_axis_name': 'Длина плеча интерферометра',
+                    'x_axis_unit': 'м',
+                    'y_axis_name': 'Мощность, относительные единицы',
+                    'y_axis_unit': 'дБ'
+                }
+            }[key]
 
-        for plt in [self.graph_widget, self.graph_widget_zoom]:  # Строим графики в обоих виджетах
-            plt.clear()  # Очищаем виджеты от предыдущих графиков
-            plt.addLegend()
-            # В зависимости от типа графика задается линейная или логарифмическая шкала
-            plt.setLogMode(False, (False, True)[key == 'Видность'])
-            # Задаем названия осей и единицы измерения
-            plt.setLabel('bottom', chart_dict['x_axis_name'], chart_dict['x_axis_unit'])
-            plt.setLabel('left', chart_dict['y_axis_name'], chart_dict['y_axis_unit'])
-            plt.plotItem.getViewBox().setMouseMode(pg.ViewBox.RectMode)  # Настройка режима работы мыши
-        for signal in self.signals:  # Для каждого сигнала в списке сигналов
-            x, y = {
-                'Видность': (signal.visibility_coordinates, signal.visibility),
-                'h-параметр': (signal.h_parameter_coordinates, signal.h_parameter),
-                'Интерференция': (signal.interference_coordinates, signal.interference),
-                'Фильтрованная интерференция': (signal.denoised_interference_coordinates, signal.denoised_interference)
-            }[key]  # Задаем значения по обеим координатам
-            name, pen = signal.name, signal.pen  # Задаем имя и цвет графика
-            print(f'Построение графика "{key}": {name}')
-            for plt in [self.graph_widget, self.graph_widget_zoom]:  # Для каждого виджета
-                # Строим графики
-                plt.plot(x, y, name=name, pen=pen)
-        for plt in [self.graph_widget, self.graph_widget_zoom]:
-            plt.enableAutoRange('y', True)  # Автоматический зум 1:1
-            plt.enableAutoRange('x', True)
-        # Привязка зума между графиками
-        lr = pg.LinearRegionItem()
-        lr.setRegion((0, self.signals[0].beat_length))
-        self.graph_widget.addItem(lr)
+            for plt in [self.graph_widget, self.graph_widget_zoom]:  # Строим графики в обоих виджетах
+                plt.clear()  # Очищаем виджеты от предыдущих графиков
+                plt.addLegend()
+                # В зависимости от типа графика задается линейная или логарифмическая шкала
+                plt.setLogMode(False, (False, True)[key == 'Видность'])
+                # Задаем названия осей и единицы измерения
+                plt.setLabel('bottom', chart_dict['x_axis_name'], chart_dict['x_axis_unit'])
+                plt.setLabel('left', chart_dict['y_axis_name'], chart_dict['y_axis_unit'])
+                plt.plotItem.getViewBox().setMouseMode(pg.ViewBox.RectMode)  # Настройка режима работы мыши
+            for signal in self.signals:  # Для каждого сигнала в списке сигналов
+                x, y = {
+                    'Видность': (signal.visibility_coordinates, signal.visibility),
+                    'h-параметр': (signal.h_parameter_coordinates, signal.h_parameter),
+                    'Интерференция': (signal.interference_coordinates, signal.interference),
+                    'Фильтрованная интерференция': (signal.denoised_interference_coordinates, signal.denoised_interference)
+                }[key]  # Задаем значения по обеим координатам
+                name, pen = signal.name, signal.pen  # Задаем имя и цвет графика
+                print(f'Построение графика "{key}": {name}')
+                for plt in [self.graph_widget, self.graph_widget_zoom]:  # Для каждого виджета
+                    # Строим графики
+                    plt.plot(x, y, name=name, pen=pen)
+            for plt in [self.graph_widget, self.graph_widget_zoom]:
+                plt.enableAutoRange('y', True)  # Автоматический зум 1:1
+                plt.enableAutoRange('x', True)
+            # Привязка зума между графиками
+            lr = pg.LinearRegionItem()
+            lr.setRegion((0, self.signals[0].beat_length))
+            self.graph_widget.addItem(lr)
 
-        def updatePlot():
-            """Настройка обновления графика при зуме"""
-            self.graph_widget_zoom.setXRange(*lr.getRegion(), padding=0)
+            def updatePlot():
+                """Настройка обновления графика при зуме"""
+                self.graph_widget_zoom.setXRange(*lr.getRegion(), padding=0)
 
-        def updateRegion():
-            """Настройка обновления региона при зуме"""
-            lr.setRegion(self.graph_widget_zoom.getViewBox().viewRange()[0])
+            def updateRegion():
+                """Настройка обновления региона при зуме"""
+                lr.setRegion(self.graph_widget_zoom.getViewBox().viewRange()[0])
 
-        lr.sigRegionChanged.connect(updatePlot)
-        self.graph_widget_zoom.sigXRangeChanged.connect(updateRegion)
-        updatePlot()
+            lr.sigRegionChanged.connect(updatePlot)
+            self.graph_widget_zoom.sigXRangeChanged.connect(updateRegion)
+            updatePlot()
 
     def save_file(self):
-        directory = '_'.join([signal.name for signal in self.signals])
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        filename, extension = QFileDialog.getSaveFileName(
-            parent=None, caption="Сохранить", directory=directory,
-            filter=".json;;txt;;.pkl;;.mat;;.csv;;.png", options=options
-        )
+        """Экспорт файлов"""
+        if self.signals:
+            directory = '_'.join([signal.name for signal in self.signals])
+            options = QFileDialog.Options()
+            options |= QFileDialog.DontUseNativeDialog
+            filename, extension = QFileDialog.getSaveFileName(
+                parent=None, caption="Сохранить", directory=directory,
+                filter="*.json;;*.txt;;*.pkl;;*.mat;;*.csv;;*.png", options=options
+            )
 
         def sig2dict(sig_list: list):
+            sig_dict = dict()
             for sig in sig_list:
-                sig_dict = {
-                    sig.name: sig.__dict__
-                }
+                sig_name = sig.name
+                sig_dict[sig_name] = dict()
+                for key, value in sig.__dict__.items():
+                    if isinstance(value, np.ndarray):
+                        sig_dict[sig_name][key] = value.tolist()
+                    else:
+                        sig_dict[sig_name][key] = value
             return sig_dict
 
-        if not ((filename is None) | (extension is None)):
+        if filename:
             signal_dict = sig2dict(self.signals)
+            extension = extension.split('*')[-1]
             if extension == '.csv':
                 if not os.path.exists(directory):
                     os.mkdir(directory)
@@ -326,6 +366,9 @@ class Ui_MainWindow(object):
                     df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in signal.items()]))
                     path = os.path.join(directory, name)
                     df.to_csv(f"{path}{extension}", index=False)
+            elif extension == '.pkl':
+                with open(f"{directory}{extension}", "wb") as file:
+                    pickle.dump(signal_dict, file)
             else:
                 with open(f"{directory}{extension}", "w") as file:
                     if extension == '.json':
@@ -333,10 +376,25 @@ class Ui_MainWindow(object):
                         file.write(signal_json)
                     elif extension == '.txt':
                         file.write(str(signal_dict))
-                    elif extension == '.pkl':
-                        pickle.dump(signal_dict, file)
 
+    def open_file(self):
+        print('Открытие файлов:')
+        self.filenames, extension = QFileDialog.getOpenFileNames(
+            filter="*.json;;*.txt;;*.pkl;;*.mat;;*.csv")  # Открытие файлов
+        [print(filename) for filename in self.filenames]
+        extension = extension.split('*')[-1]
 
+        if self.filenames:  # Если список файлов не пустой
+            for filename in self.filenames:
+                if extension == '.json':
+                    with open(filename) as file:
+                        signal_dict: dict = json.load(file)
+                        for item in signal_dict.values():
+                            signal = Signal()
+                            signal.read_signal(signal_dict=item)
+                            self.signals.append(signal)
+
+        self.draw_graph()
 
 
 if __name__ == "__main__":
@@ -367,5 +425,5 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
-    MainWindow.showFullScreen()
+    MainWindow.showMaximized()
     sys.exit(app.exec_())
