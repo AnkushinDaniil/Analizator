@@ -21,174 +21,19 @@ import json
 from scipy.io import savemat, loadmat
 
 from Data.Signal import Signal
+from mainwindow import Ui_MainWindow
 
 pg.setConfigOptions(antialias=True)
 
 
-class Ui_MainWindow(object):
+class MainWindow(Ui_MainWindow):
     """Графический интерфейс главного окна"""
 
     def __init__(self):
+        super().__init__()
         self.key = None
         self.signals = []
         self.filenames = None
-
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1300, 735)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.centralwidget)
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_4.setSizeConstraint(QtWidgets.QLayout.SetDefaultConstraint)
-        self.verticalLayout_4.setObjectName("verticalLayout_4")
-        self.graph_widget = PlotWidget(self.centralwidget)
-        self.graph_widget.setMinimumSize(QtCore.QSize(900, 300))
-        self.graph_widget.setObjectName("graph_widget")
-        self.verticalLayout_4.addWidget(self.graph_widget)
-        self.graph_widget_zoom = PlotWidget(self.centralwidget)
-        self.graph_widget_zoom.setMinimumSize(QtCore.QSize(900, 300))
-        self.graph_widget_zoom.setObjectName("graph_widget_zoom")
-        self.verticalLayout_4.addWidget(self.graph_widget_zoom)
-        self.horizontalLayout.addLayout(self.verticalLayout_4)
-        self.verticalLayout = QtWidgets.QVBoxLayout()
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.formLayout = QtWidgets.QFormLayout()
-        self.formLayout.setObjectName("formLayout")
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setObjectName("label")
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
-        self.total_time = QtWidgets.QLineEdit(self.centralwidget)
-        self.total_time.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.total_time.setObjectName("total_time")
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.total_time)
-        self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setObjectName("label_2")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_2)
-        self.speed = QtWidgets.QLineEdit(self.centralwidget)
-        self.speed.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.speed.setObjectName("speed")
-        self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.speed)
-        self.label_3 = QtWidgets.QLabel(self.centralwidget)
-        self.label_3.setObjectName("label_3")
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_3)
-        self.lambda_source = QtWidgets.QLineEdit(self.centralwidget)
-        self.lambda_source.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.lambda_source.setObjectName("lambda_source")
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.lambda_source)
-        self.label_4 = QtWidgets.QLabel(self.centralwidget)
-        self.label_4.setObjectName("label_4")
-        self.formLayout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.label_4)
-        self.source_bandwith = QtWidgets.QLineEdit(self.centralwidget)
-        self.source_bandwith.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.source_bandwith.setObjectName("source_bandwith")
-        self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.source_bandwith)
-        self.label_5 = QtWidgets.QLabel(self.centralwidget)
-        self.label_5.setObjectName("label_5")
-        self.formLayout.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.label_5)
-        self.delta_n = QtWidgets.QLineEdit(self.centralwidget)
-        self.delta_n.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.delta_n.setObjectName("delta_n")
-        self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.delta_n)
-        self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setObjectName("label_6")
-        self.formLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.label_6)
-        self.ADC_frequency = QtWidgets.QLineEdit(self.centralwidget)
-        self.ADC_frequency.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.ADC_frequency.setObjectName("ADC_frequency")
-        self.formLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.ADC_frequency)
-        self.label_7 = QtWidgets.QLabel(self.centralwidget)
-        self.label_7.setObjectName("label_7")
-        self.formLayout.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.label_7)
-        self.phase_modulation_frequency = QtWidgets.QLineEdit(self.centralwidget)
-        self.phase_modulation_frequency.setMaximumSize(QtCore.QSize(100, 16777215))
-        self.phase_modulation_frequency.setObjectName("phase_modulation_frequency")
-        self.formLayout.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.phase_modulation_frequency)
-        self.verticalLayout.addLayout(self.formLayout)
-        self.gridLayout = QtWidgets.QGridLayout()
-        self.gridLayout.setObjectName("gridLayout")
-        self.clear_dataButton = QtWidgets.QPushButton(self.centralwidget)
-        self.clear_dataButton.setObjectName("clear_dataButton")
-        self.gridLayout.addWidget(self.clear_dataButton, 0, 0, 1, 2)
-        self.color_resetButton = QtWidgets.QPushButton(self.centralwidget)
-        self.color_resetButton.setObjectName("color_resetButton")
-        self.gridLayout.addWidget(self.color_resetButton, 1, 0, 1, 1)
-        self.clear_graphButton = QtWidgets.QPushButton(self.centralwidget)
-        self.clear_graphButton.setObjectName("clear_graphButton")
-        self.gridLayout.addWidget(self.clear_graphButton, 1, 1, 1, 1)
-        self.buildButton = QtWidgets.QPushButton(self.centralwidget)
-        self.buildButton.setMaximumSize(QtCore.QSize(150, 16777215))
-        self.buildButton.setObjectName("buildButton")
-        self.gridLayout.addWidget(self.buildButton, 2, 1, 1, 1)
-        self.graphType = QtWidgets.QComboBox(self.centralwidget)
-        self.graphType.setMaximumSize(QtCore.QSize(150, 16777215))
-        self.graphType.setObjectName("graphType")
-        self.graphType.addItem("")
-        self.graphType.addItem("")
-        self.graphType.addItem("")
-        self.graphType.addItem("")
-        self.gridLayout.addWidget(self.graphType, 2, 0, 1, 1)
-        self.verticalLayout.addLayout(self.gridLayout)
-        self.horizontalLayout.addLayout(self.verticalLayout)
-        self.horizontalLayout.setStretch(0, 5)
-        self.horizontalLayout.setStretch(1, 2)
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1300, 21))
-        self.menubar.setObjectName("menubar")
-        self.menu = QtWidgets.QMenu(self.menubar)
-        self.menu.setObjectName("menu")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
-        self.newButton = QtWidgets.QAction(MainWindow)
-        self.newButton.setObjectName("newButton")
-        self.openButton = QtWidgets.QAction(MainWindow)
-        self.openButton.setObjectName("openButton")
-        self.saveButton = QtWidgets.QAction(MainWindow)
-        self.saveButton.setEnabled(False)
-        self.saveButton.setObjectName("saveButton")
-        self.menu.addAction(self.newButton)
-        self.menu.addAction(self.openButton)
-        self.menu.addAction(self.saveButton)
-        self.menubar.addAction(self.menu.menuAction())
-
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-        self.add_functions()  # Добавление функционала к элементам интерфейса
-
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Analizator"))
-        self.label.setText(_translate("MainWindow", "Время ввода, с"))
-        self.total_time.setText(_translate("MainWindow", "30"))
-        self.label_2.setText(_translate("MainWindow", "Скорость, мм/c"))
-        self.speed.setText(_translate("MainWindow", "1"))
-        self.label_3.setText(_translate("MainWindow", "Центральная длина волны источника, нм"))
-        self.lambda_source.setText(_translate("MainWindow", "1560"))
-        self.label_4.setText(_translate("MainWindow", "Ширина полосы источника, нм"))
-        self.source_bandwith.setText(_translate("MainWindow", "45"))
-        self.label_5.setText(_translate("MainWindow", "Разница эффективных показателей преломления волокна"))
-        self.delta_n.setText(_translate("MainWindow", "0.0006086"))
-        self.label_6.setText(_translate("MainWindow", "Частота АЦП, Гц"))
-        self.ADC_frequency.setText(_translate("MainWindow", "500000"))
-        self.label_7.setText(_translate("MainWindow", "Частота фазовой модуляции, Гц"))
-        self.phase_modulation_frequency.setText(_translate("MainWindow", "0"))
-        self.clear_dataButton.setText(_translate("MainWindow", "Очистить данные"))
-        self.color_resetButton.setText(_translate("MainWindow", "Перезагрузка цветов"))
-        self.clear_graphButton.setText(_translate("MainWindow", "Очистить график"))
-        self.buildButton.setText(_translate("MainWindow", "Построить"))
-        self.graphType.setItemText(0, _translate("MainWindow", "h-параметр"))
-        self.graphType.setItemText(1, _translate("MainWindow", "Видность"))
-        self.graphType.setItemText(2, _translate("MainWindow", "Интерференция"))
-        self.graphType.setItemText(3, _translate("MainWindow", "Фильтрованная интерференция"))
-        self.menu.setTitle(_translate("MainWindow", "Файл"))
-        self.newButton.setText(_translate("MainWindow", "Новый"))
-        self.openButton.setText(_translate("MainWindow", "Открыть"))
-        self.saveButton.setText(_translate("MainWindow", "Сохранить"))
 
     def add_functions(self):
         """Добавление функционала к элементам интерфейса"""
@@ -302,6 +147,12 @@ class Ui_MainWindow(object):
                     'x_axis_unit': 'м',
                     'y_axis_name': 'Мощность',
                     'y_axis_unit': 'Относительные единицы'
+                },
+                'Фильтр Чебышёва': {
+                    'x_axis_name': 'Частота',
+                    'x_axis_unit': 'Гц',
+                    'y_axis_name': 'Амплитуда',
+                    'y_axis_unit': 'Относительные единицы'
                 }
             }[self.key]
 
@@ -319,7 +170,8 @@ class Ui_MainWindow(object):
                     'h-параметр': (signal.h_parameter_coordinates, signal.h_parameter),
                     'Интерференция': (signal.interference_coordinates, signal.interference),
                     'Фильтрованная интерференция': (
-                    signal.denoised_interference_coordinates, signal.denoised_interference)
+                    signal.denoised_interference_coordinates, signal.denoised_interference),
+                    'Фильтр Чебышёва': (signal.cheb2_x, signal.cheb2_y)
                 }[self.key]  # Задаем значения по обеим координатам
                 name, pen = signal.name, signal.pen  # Задаем имя и цвет графика
                 print(f'Построение графика "{self.key}": {name}')
@@ -473,8 +325,9 @@ if __name__ == "__main__":
     app.setPalette(palette)
 
     # Код функции сгенерирован с помощью pyuic5
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.showMaximized()
+    main_window = QtWidgets.QMainWindow()
+    ui = MainWindow()
+    ui.setupUi(main_window)
+    ui.add_functions()  # Добавление функционала к элементам интерфейса
+    main_window.showMaximized()
     sys.exit(app.exec_())

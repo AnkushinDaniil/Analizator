@@ -249,6 +249,11 @@
           </item>
           <item>
            <property name="text">
+            <string>Фильтр Чебышёва</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>Фильтрованная интерференция</string>
            </property>
           </item>

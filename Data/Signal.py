@@ -1,6 +1,7 @@
 import numpy as np
 from pyqtgraph import colormap
-from scipy.signal import find_peaks, freqs, cheby2, sosfilt, cheb2ord
+from scipy.signal import find_peaks, freqs, cheby2, sosfilt, cheb2ord, freqz
+from scipy.fft import fft, ifft, rfft, irfft
 
 
 class Signal:
@@ -26,7 +27,7 @@ class Signal:
         self.n_to_length = None  # Коэффициент перевода из единиц в длину
         self.name = None  # Название сигнала
         self.pen = None  # Цвет сигнала
-        self.periodicity_of_the_interference_pattern = None  # Период интерференционной картины
+        self.split_num = None  # Период интерференционной картины
         self.phase_modulation_frequency = None  # Частота фазовой модуляции
         self.source_bandwith = None  # Ширина полосы источника, м
         self.speed = None  # Скорость движения подвижки, м/с
@@ -65,15 +66,13 @@ class Signal:
         self.interference_coordinates = self.__set_0(
             self.interference_coordinates, self.interference
         )
-        self.denoised_interference = self.__remove_noise(self.interference, self.ADC_frequency)
+        self.cheb2_x, self.cheb2_y, self.denoised_interference = self.__remove_noise(self.interference, self.ADC_frequency)
         self.denoised_interference_coordinates = self.__set_0(
             self.interference_coordinates, self.denoised_interference
         )
-        self.periodicity_of_the_interference_pattern = \
-            self.__calculate_interference_pattern_periodicity(self.denoised_interference)
+        self.split_num = self.__get_split_num(self.total_time, self.speed)
         self.visibility_coordinates, self.visibility = self.__calculate_visibility(
-            self.denoised_interference_coordinates, self.denoised_interference,
-            self.periodicity_of_the_interference_pattern
+            self.denoised_interference_coordinates, self.denoised_interference, self.split_num
         )
         self.visibility_coordinates = self.__set_0(
             self.visibility_coordinates, self.visibility
@@ -94,62 +93,58 @@ class Signal:
     @staticmethod
     def __set_0(x_axes: np.ndarray, y_axes: np.ndarray):
         i = np.where(y_axes == np.max(y_axes))
-        x_axes = x_axes - x_axes[i[0][0]]
+        x_axes: np.ndarray = x_axes - x_axes[i[0][0]]
         return x_axes
+
 
     @staticmethod
     def __remove_noise(interference: np.ndarray, ADC_frequency: float):
-        # windowSize = np.size(interference) / 100000
-        # window = np.hanning(windowSize)
-        # window = window / window.sum()
-        #
-        # # filter the data using convolution
-        # denoised_interference = np.convolve(window, interference, mode='valid')
-        # denoised_interference_coordinates = interference_coordinates[:denoised_interference.shape[0]]
+        fft_interference = rfft(interference)
+        fft_interference[1:] = 0
+        interference_0: np.ndarray = interference - np.abs(irfft(fft_interference))
+        print(interference_0)
         Fs = ADC_frequency  # Sampling frequency in Hz
         fp = 2600  # Pass band frequency in Hz
         fs = 6000  # Stop band frequency in Hz
         Ap = 1  # Pass band ripple in dB
         As = 100  # Stop band attenuation in dB
-        # Compute pass band and stop band edge frequencies
 
-        # Normalized passband edge
-        # frequencies w.r.t. Nyquist rate
-        wp = fp / (Fs / 2)
+        analog = False
+        N, Wn = cheb2ord(wp=fp, ws=fs, gpass=Ap, gstop=As, analog=analog, fs=Fs)
+        b, a = cheby2(N=N, rs=As, Wn=Wn, btype='lowpass', analog=analog, fs=Fs)
+        w, h = freqz(b, a)
+        sos = cheby2(N=N, rs=As, Wn=Wn, btype='lowpass', analog=analog, fs=Fs, output='sos')
+        denoised_interference: np.ndarray = sosfilt(sos, interference_0)
 
-        # Normalized stopband
-        # edge frequencies
-        ws = fs / (Fs / 2)
-        N, wc = cheb2ord(wp, ws, Ap, As)
-        sos = cheby2(N=N, rs=As, Wn=wc, btype='highpass', fs=Fs, output='sos')
-        denoised_interference = sosfilt(sos, interference)
-
-        return denoised_interference
+        return w/np.pi*ADC_frequency/2, 10 * np.log10(abs(h)), denoised_interference
 
     @staticmethod
-    def __calculate_interference_pattern_periodicity(denoised_interference: np.ndarray):
-        top_values = denoised_interference[denoised_interference > np.quantile(denoised_interference, 0.9999)]
-        peaks, _ = find_peaks(top_values)
-        # return int(top_values.shape[0] / peaks.shape[0] * 10)
-        return 500
+    def __get_split_num(total_time: float, speed: float):
+        split_num = total_time * speed / 0.000001
+        print(split_num)
+        return split_num
 
     @staticmethod
-    def __calculate_visibility(x: np.ndarray, y: np.ndarray, span: float):
-        splited_denoised_interference = np.array_split(y, y.shape[0] // span)
-        maximum = (np.max(i) for i in splited_denoised_interference)
-        minimum = (np.min(i) for i in splited_denoised_interference)
-        visibility = np.fromiter(((ma - mi) / (ma + mi) for ma, mi in zip(maximum, minimum)), float)
-        visibility_coordinates = np.linspace(np.min(x), np.max(x), num=visibility.shape[0])
+    def __calculate_visibility(x: np.ndarray, y: np.ndarray, split_num: float):
+        splited_denoised_interference: np.ndarray = np.array_split(y, split_num)
+        # print(splited_denoised_interference)
+        maximum = (i.max() for i in splited_denoised_interference)
+        # print(maximum)
+        minimum = (i.min() for i in splited_denoised_interference)
+        # print(minimum)
+        visibility: np.ndarray = np.fromiter(((ma - mi) / (ma + mi) for ma, mi in zip(maximum, minimum)), float)
+        # print(visibility)
+        visibility_coordinates: np.ndarray = np.linspace(x.min(), x.max(), num=visibility.shape[0])
         return visibility_coordinates, visibility
 
     @staticmethod
     def __calculate_h_param(visibility_coordinates: np.ndarray, visibility: np.ndarray, lambda_source: float,
                             delta_n: float, source_bandwith: float):
-        y = np.divide(visibility, np.max(visibility))
+        y = np.divide(visibility, visibility.max())
         beat_length = lambda_source / delta_n
         depolarization_length = (lambda_source ** 2) / (source_bandwith * delta_n)
-        h_parameter = 10 * np.log10(np.square(y) / depolarization_length)
-        h_parameter_coordinates = visibility_coordinates * 0.002 / delta_n
+        h_parameter: np.ndarray = 10 * np.log10(np.square(y) / depolarization_length)
+        h_parameter_coordinates: np.ndarray = visibility_coordinates * 0.002 / delta_n
         return h_parameter_coordinates, h_parameter, beat_length, depolarization_length
 
     @staticmethod
