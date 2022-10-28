@@ -99,22 +99,23 @@ class Signal:
 
     @staticmethod
     def __remove_noise(interference: np.ndarray, ADC_frequency: float):
-        fft_interference = rfft(interference)
-        fft_interference[1:] = 0
-        interference_0: np.ndarray = interference - np.abs(irfft(fft_interference))
-        print(interference_0)
-        Fs = ADC_frequency  # Sampling frequency in Hz
-        fp = 2600  # Pass band frequency in Hz
-        fs = 6000  # Stop band frequency in Hz
-        Ap = 1  # Pass band ripple in dB
-        As = 100  # Stop band attenuation in dB
+        x = np.arange(interference.shape[0])
+        coef = np.polyfit(x, interference, 1)
+        poly1d = np.poly1d(coef)
+        linear = poly1d(x)
+        interference_0: np.ndarray = interference - linear
+        fs = ADC_frequency  # Частота дискретизации в Гц
+        wp = 2600  # Частота полосы пропускания в Гц
+        ws = 6000  # Частота полосы заграждения в Гц
+        gpass = 1  # Неравномерность полосы пропускания в дБ
+        gstop = 100  # Затухание в полосе задерживания в дБ
 
         analog = False
-        N, Wn = cheb2ord(wp=fp, ws=fs, gpass=Ap, gstop=As, analog=analog, fs=Fs)
-        b, a = cheby2(N=N, rs=As, Wn=Wn, btype='lowpass', analog=analog, fs=Fs)
+        N, Wn = cheb2ord(wp=wp, ws=ws, gpass=gpass, gstop=gstop, analog=analog, fs=fs)
+        b, a = cheby2(N=N, rs=gpass, Wn=Wn, btype='lowpass', analog=analog, fs=fs)
         w, h = freqz(b, a)
-        sos = cheby2(N=N, rs=As, Wn=Wn, btype='lowpass', analog=analog, fs=Fs, output='sos')
-        denoised_interference: np.ndarray = sosfilt(sos, interference_0)
+        sos = cheby2(N=N, rs=gpass, Wn=Wn, btype='lowpass', analog=analog, fs=fs, output='sos')
+        denoised_interference: np.ndarray = sosfilt(sos, interference_0) + linear
 
         return w/np.pi*ADC_frequency/2, 10 * np.log10(abs(h)), denoised_interference
 
@@ -144,7 +145,7 @@ class Signal:
         beat_length = lambda_source / delta_n
         depolarization_length = (lambda_source ** 2) / (source_bandwith * delta_n)
         h_parameter: np.ndarray = 10 * np.log10(np.square(y) / depolarization_length)
-        h_parameter_coordinates: np.ndarray = visibility_coordinates * 0.002 / delta_n
+        h_parameter_coordinates: np.ndarray = visibility_coordinates / delta_n
         return h_parameter_coordinates, h_parameter, beat_length, depolarization_length
 
     @staticmethod

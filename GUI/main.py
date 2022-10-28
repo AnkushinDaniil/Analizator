@@ -183,7 +183,10 @@ class MainWindow(Ui_MainWindow):
                 plt.enableAutoRange('x', True)
             # Привязка зума между графиками
             lr = pg.LinearRegionItem()
-            lr.setRegion((0, self.signals[0].beat_length))
+            dep_l_x2 = 2 * self.signals[0].depolarization_length * (self.signals[0].delta_n, 1)[
+                self.key == 'h-параметр'
+            ]
+            lr.setRegion((-dep_l_x2, dep_l_x2))
             self.graph_widget.addItem(lr)
 
             def updatePlot():
