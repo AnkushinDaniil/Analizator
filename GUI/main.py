@@ -186,7 +186,7 @@ class MainWindow(Ui_MainWindow):
                     'Фильтрованная интерференция': (signal.interference_clear_x, signal.interference_clear),
                     'Фильтр интерференции': (signal.filter_i_x, signal.filter_i_y),
                     'Фильтр видности': (signal.filter_v_x, signal.filter_v_y)
-                }[self.key]  # Задаем значения по обеим координатам
+                }[self.key]
                 name, pen = signal.name, signal.pen  # Задаем имя и цвет графика
                 print(f'Построение графика "{self.key}": {name}')
                 for plt in [self.graph_widget, self.graph_widget_zoom]:  # Для каждого виджета
