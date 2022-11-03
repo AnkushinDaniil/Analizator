@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1300</width>
+    <width>1351</width>
     <height>735</height>
    </rect>
   </property>
@@ -154,7 +154,7 @@
          </widget>
         </item>
         <item row="5" column="1">
-         <widget class="QLineEdit" name="ADC_frequency">
+         <widget class="QLineEdit" name="ADC_fr">
           <property name="maximumSize">
            <size>
             <width>100</width>
@@ -174,7 +174,7 @@
          </widget>
         </item>
         <item row="6" column="1">
-         <widget class="QLineEdit" name="phase_modulation_frequency">
+         <widget class="QLineEdit" name="pm_fr">
           <property name="maximumSize">
            <size>
             <width>100</width>
@@ -186,24 +186,30 @@
           </property>
          </widget>
         </item>
+        <item row="7" column="1">
+         <widget class="QLCDNumber" name="beat_length"/>
+        </item>
+        <item row="7" column="0">
+         <widget class="QLabel" name="label_8">
+          <property name="text">
+           <string>Длина биений, мм</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0">
+         <widget class="QLabel" name="label_9">
+          <property name="text">
+           <string>Длина деполяризации, мм</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="1">
+         <widget class="QLCDNumber" name="depolarization_length"/>
+        </item>
        </layout>
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="0" colspan="2">
-         <widget class="QPushButton" name="clear_dataButton">
-          <property name="text">
-           <string>Очистить данные</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QPushButton" name="color_resetButton">
-          <property name="text">
-           <string>Перезагрузка цветов</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="1">
          <widget class="QPushButton" name="clear_graphButton">
           <property name="text">
@@ -212,7 +218,7 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="QPushButton" name="buildButton">
+         <widget class="QPushButton" name="reloadButton">
           <property name="maximumSize">
            <size>
             <width>150</width>
@@ -220,12 +226,18 @@
            </size>
           </property>
           <property name="text">
-           <string>Построить</string>
+           <string>Обновить</string>
           </property>
          </widget>
         </item>
         <item row="2" column="0">
          <widget class="QComboBox" name="graphType">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="maximumSize">
            <size>
             <width>150</width>
@@ -244,12 +256,12 @@
           </item>
           <item>
            <property name="text">
-            <string>Интерференция</string>
+            <string>Фильтрованная видность</string>
            </property>
           </item>
           <item>
            <property name="text">
-            <string>Фильтр Чебышёва</string>
+            <string>Интерференция</string>
            </property>
           </item>
           <item>
@@ -257,6 +269,30 @@
             <string>Фильтрованная интерференция</string>
            </property>
           </item>
+          <item>
+           <property name="text">
+            <string>Фильтр интерференции</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Фильтр видности</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="color_resetButton">
+          <property name="text">
+           <string>Перезагрузка цветов</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QPushButton" name="clear_dataButton">
+          <property name="text">
+           <string>Очистить данные</string>
+          </property>
          </widget>
         </item>
        </layout>
@@ -270,8 +306,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1300</width>
-     <height>21</height>
+     <width>1351</width>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu">

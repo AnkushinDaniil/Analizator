@@ -16,8 +16,8 @@ from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
 import pyqtgraph as pg
-from pyqtgraph import PlotWidget
 import json
+import colorcet as cc
 from scipy.io import savemat, loadmat
 
 from Data.Signal import Signal
@@ -38,7 +38,7 @@ class MainWindow(Ui_MainWindow):
     def add_functions(self):
         """Добавление функционала к элементам интерфейса"""
         self.newButton.triggered.connect(self.new_file)
-        self.buildButton.clicked.connect(self.draw_graph)
+        self.reloadButton.clicked.connect(self.draw_graph)
         self.saveButton.triggered.connect(self.save_file)
         self.openButton.triggered.connect(self.open_file)
         self.clear_graphButton.clicked.connect(self.clear_graph)
@@ -63,12 +63,12 @@ class MainWindow(Ui_MainWindow):
         except ValueError:
             self.show_error()
 
-    def set_signals(self, filenames, total_time, speed, lambda_source, source_bandwith, delta_n, ADC_frequency,
-                    phase_modulation_frequency, pens):
+    def set_signals(self, filenames, total_time, speed, lambda_source, source_bandwith, delta_n, ADC_fr,
+                    pm_fr, pens):
         """Создание объектов класса "сигнал" внутри объекта класса главного окна"""
         # Считывание параметров из элементов графического интерфейса и преобразование их в числа
         float_parameters = [self.str2float(i) for i in [total_time, speed, lambda_source, source_bandwith, delta_n,
-                                                        ADC_frequency, phase_modulation_frequency]]
+                                                        ADC_fr, pm_fr]]
         if all([not (parameter is None) for parameter in float_parameters]):  # Если все параметры введены правильно
             # Создание объектов класса "сигнал"
             for i, pen in zip(filenames, pens):
@@ -80,10 +80,10 @@ class MainWindow(Ui_MainWindow):
                     lambda_source=lambda_source,
                     source_bandwith=source_bandwith,
                     delta_n=delta_n,
-                    ADC_frequency=ADC_frequency,
-                    phase_modulation_frequency=phase_modulation_frequency,
+                    ADC_fr=ADC_fr,
+                    pm_fr=pm_fr,
                     name=i.split('/')[-1].split('.')[0],
-                    pen=pen
+                    pen=pen,
                 )
                 self.signals.append(signal)
         self.saveButton.setEnabled(True)
@@ -105,9 +105,9 @@ class MainWindow(Ui_MainWindow):
                 lambda_source=self.str2float(self.lambda_source.text()),
                 source_bandwith=self.str2float(self.source_bandwith.text()),
                 delta_n=self.str2float(self.delta_n.text()),
-                ADC_frequency=self.str2float(self.ADC_frequency.text()),
-                phase_modulation_frequency=self.str2float(self.phase_modulation_frequency.text()),
-                pens=pens
+                ADC_fr=self.str2float(self.ADC_fr.text()),
+                pm_fr=self.str2float(self.pm_fr.text()),
+                pens=pens,
             )
             self.newButton.setEnabled(True)
 
@@ -124,17 +124,23 @@ class MainWindow(Ui_MainWindow):
             print(f'Выбранный график - {self.key}')
             # В зависимости от ключа будет создан словарь, который будет задавать дальнейшие ключи для построения графиков
             chart_dict = {
+                'h-параметр': {
+                    'x_axis_name': 'Длина волокна',
+                    'x_axis_unit': 'м',
+                    'y_axis_name': 'h-параметр',
+                    'y_axis_unit': 'дБ'
+                },
                 'Видность': {
                     'x_axis_name': 'Длина плеча интерферометра',
                     'x_axis_unit': 'м',
                     'y_axis_name': 'Видность',
                     'y_axis_unit': ''
                 },
-                'h-параметр': {
-                    'x_axis_name': 'Длина волокна',
+                'Фильтрованная видность': {
+                    'x_axis_name': 'Длина плеча интерферометра',
                     'x_axis_unit': 'м',
-                    'y_axis_name': 'h-параметр',
-                    'y_axis_unit': 'дБ'
+                    'y_axis_name': 'Видность',
+                    'y_axis_unit': ''
                 },
                 'Интерференция': {
                     'x_axis_name': 'Длина плеча интерферометра',
@@ -148,7 +154,14 @@ class MainWindow(Ui_MainWindow):
                     'y_axis_name': 'Мощность',
                     'y_axis_unit': 'Относительные единицы'
                 },
-                'Фильтр Чебышёва': {
+
+                'Фильтр интерференции': {
+                    'x_axis_name': 'Частота',
+                    'x_axis_unit': 'Гц',
+                    'y_axis_name': 'Амплитуда',
+                    'y_axis_unit': 'Относительные единицы'
+                },
+                'Фильтр видности': {
                     'x_axis_name': 'Частота',
                     'x_axis_unit': 'Гц',
                     'y_axis_name': 'Амплитуда',
@@ -159,19 +172,20 @@ class MainWindow(Ui_MainWindow):
             for plt in [self.graph_widget, self.graph_widget_zoom]:  # Строим графики в обоих виджетах
                 plt.addLegend()
                 # В зависимости от типа графика задается линейная или логарифмическая шкала
-                plt.setLogMode(False, (False, True)[self.key == 'Видность'])
+                plt.setLogMode(False, (False, True)[(self.key == 'Видность') | (self.key == 'Фильтрованная видность')])
                 # Задаем названия осей и единицы измерения
                 plt.setLabel('bottom', chart_dict['x_axis_name'], chart_dict['x_axis_unit'])
                 plt.setLabel('left', chart_dict['y_axis_name'], chart_dict['y_axis_unit'])
                 plt.plotItem.getViewBox().setMouseMode(pg.ViewBox.RectMode)  # Настройка режима работы мыши
             for signal in self.signals:  # Для каждого сигнала в списке сигналов
                 x, y = {
-                    'Видность': (signal.visibility_coordinates, signal.visibility),
-                    'h-параметр': (signal.h_parameter_coordinates, signal.h_parameter),
-                    'Интерференция': (signal.interference_coordinates, signal.interference),
-                    'Фильтрованная интерференция': (
-                    signal.denoised_interference_coordinates, signal.denoised_interference),
-                    'Фильтр Чебышёва': (signal.cheb2_x, signal.cheb2_y)
+                    'h-параметр': (signal.h_par_x, signal.h_par),
+                    'Фильтрованная видность': (signal.visibility_clear_x, signal.visibility_clear),
+                    'Видность': (signal.visibility_x, signal.visibility),
+                    'Интерференция': (signal.interference_x, signal.interference),
+                    'Фильтрованная интерференция': (signal.interference_clear_x, signal.interference_clear),
+                    'Фильтр интерференции': (signal.filter_i_x, signal.filter_i_y),
+                    'Фильтр видности': (signal.filter_v_x, signal.filter_v_y)
                 }[self.key]  # Задаем значения по обеим координатам
                 name, pen = signal.name, signal.pen  # Задаем имя и цвет графика
                 print(f'Построение графика "{self.key}": {name}')
@@ -183,10 +197,10 @@ class MainWindow(Ui_MainWindow):
                 plt.enableAutoRange('x', True)
             # Привязка зума между графиками
             lr = pg.LinearRegionItem()
-            dep_l_x2 = 2 * self.signals[0].depolarization_length * (self.signals[0].delta_n, 1)[
+            depol_len_x2 = 2 * self.signals[0].depol_len * (self.signals[0].delta_n, 1)[
                 self.key == 'h-параметр'
             ]
-            lr.setRegion((-dep_l_x2, dep_l_x2))
+            lr.setRegion((-depol_len_x2, depol_len_x2))
             self.graph_widget.addItem(lr)
 
             def updatePlot():
@@ -215,12 +229,10 @@ class MainWindow(Ui_MainWindow):
 
     @staticmethod
     def generate_pens(n: int):
-        colors = pg.colormap.get('CET-C1').color
-        l = len(colors)
-        k = l // n
+        colors = cc.glasbey_category10
         print('Подбор набора цветов для графиков')
         # Подбор набора цветов для графиков
-        pens = [[round(255 * r), round(255 * g), round(256 * b)] for r, g, b, a in colors[::k]]
+        pens = [[round(255 * r), round(255 * g), round(256 * b)] for r, g, b in colors[:n]]
         return pens
 
     def clear_data(self):
