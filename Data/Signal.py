@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.signal import cheby2, sosfilt, cheb2ord, freqz, remez, lfilter
+from scipy.signal import cheby2, sosfilt, cheb2ord, freqz, remez, lfilter, firwin, firwin2
 
 
 class Signal:
@@ -71,7 +71,7 @@ class Signal:
         self.interference_x = self.__set_0(
             self.interference_x, self.interference
         )
-        self.filter_i_x, self.filter_i_y, self.interference_clear = self.__remove_noise_i(self.interference, self.ADC_fr)
+        self.filter_i_x, self.filter_i_y, self.interference_clear = self.__remove_noise(self.interference, self.ADC_fr)
         self.interference_clear_x = self.__set_0(
             self.interference_x, self.interference_clear
         )
@@ -80,7 +80,8 @@ class Signal:
             self.interference_clear_x, self.interference_clear, self.split_num
         )
         self.visibility_x = self.__set_0(self.visibility_x, self.visibility)
-        self.filter_v_x, self.filter_v_y, self.visibility_clear = self.__remove_noise_v(self.visibility)
+        self.filter_v_x, self.filter_v_y, self.visibility_clear = self.__remove_noise(self.visibility, self.ADC_fr)
+        self.visibility_clear = self.visibility_clear / self.visibility_clear.max() * self.visibility.max()
         self.visibility_clear_x = self.__set_0(self.visibility_x, self.visibility_clear)
         self.h_par_x, self.h_par, self.beat_length, self.depol_len = \
             self.__calculate_h_param(self.visibility_clear_x, self.visibility_clear, self.lambda_source, self.delta_n,
@@ -101,53 +102,41 @@ class Signal:
         return x_axes
 
 
-    @staticmethod
-    def __remove_noise_i(interference: np.ndarray, ADC_fr: float):
-        x = np.arange(interference.shape[0])
-        coef = np.polyfit(x, interference, 1)
-        poly1d = np.poly1d(coef)
-        linear = poly1d(x)
-        interference_0: np.ndarray = interference - linear
-        fs = ADC_fr  # Частота дискретизации в Гц
-        wp = 2600  # Частота полосы пропускания в Гц
-        ws = 6000  # Частота полосы заграждения в Гц
-        gpass = 1  # Неравномерность полосы пропускания в дБ
-        gstop = 100  # Затухание в полосе задерживания в дБ
-
-        analog = False
-        N, Wn = cheb2ord(wp=wp, ws=ws, gpass=gpass, gstop=gstop, analog=analog, fs=fs)
-        b, a = cheby2(N=N, rs=gpass, Wn=Wn, btype='lowpass', analog=analog, fs=fs)
-        w, h = freqz(b, a)
-        sos = cheby2(N=N, rs=gpass, Wn=Wn, btype='lowpass', analog=analog, fs=fs, output='sos')
-        interference_clear: np.ndarray = sosfilt(sos, interference_0) + linear
-        # elif filt == 'Фильтр Паркса-МакКлеллана':
-        #     fs = 1000  # Sample rate, Hz
-        #     cutoff = 100  # Desired cutoff frequency, Hz
-        #     trans_width = 80  # Width of transition from pass band to stop band, Hz
-        #     numtaps = 20  # Size of the FIR filter.
-        #     gpass = 0.0057563991496  # Passband Ripple
-        #     gstop = 0.0001  # Stopband Attenuation
-        #     b = remez(numtaps=numtaps, bands=[0, cutoff, cutoff + trans_width, 0.5 * fs], desired=[gpass, gstop], Hz=fs)
-        #     w, h = freqz(b)
-        #     y = lfilter(b, [1.0], x)
-        #     interference_clear: np.ndarray = y + linear
-
-        return w/np.pi*ADC_fr/2, 10 * np.log10(abs(h)), interference_clear
+    # @staticmethod
+    # def __remove_noise_i(interference: np.ndarray, ADC_fr: float):
+    #     x = np.arange(interference.shape[0])
+    #     coef = np.polyfit(x, interference, 1)
+    #     poly1d = np.poly1d(coef)
+    #     linear = poly1d(x)
+    #     interference_0: np.ndarray = interference - linear
+    #     fs = ADC_fr  # Частота дискретизации в Гц
+    #     wp = 2600  # Частота полосы пропускания в Гц
+    #     ws = 6000  # Частота полосы заграждения в Гц
+    #     gpass = 0.1  # Неравномерность полосы пропускания в дБ
+    #     gstop = 120  # Затухание в полосе задерживания в дБ
+    #
+    #     analog = False
+    #     N, Wn = cheb2ord(wp=wp, ws=ws, gpass=gpass, gstop=gstop, analog=analog, fs=fs)
+    #     b, a = cheby2(N=N, rs=gstop, Wn=Wn, btype='lowpass', analog=analog, fs=fs)
+    #     w, h = freqz(b, a)
+    #     sos = cheby2(N=N, rs=gpass, Wn=Wn, btype='lowpass', analog=analog, fs=fs, output='sos')
+    #     interference_clear: np.ndarray = sosfilt(sos, interference_0) + linear
+    #
+    #     return w/np.pi*ADC_fr/2, 10 * np.log10(abs(h)), interference_clear
 
     @staticmethod
-    def __remove_noise_v(visibility: np.ndarray):
-        fs = 1000  # Sample rate, Hz
-        cutoff = 100  # Desired cutoff frequency, Hz
-        trans_width = 80  # Width of transition from pass band to stop band, Hz
-        numtaps = 20  # Size of the FIR filter.
-        gpass = 0.0057563991496  # Passband Ripple
-        gstop = 0.0001  # Stopband Attenuation
-        b = remez(numtaps=numtaps, bands=[0, cutoff, cutoff + trans_width, 0.5 * fs], desired=[gpass, gstop], Hz=fs)
-        w, h = freqz(b)
-        y = lfilter(b, [1.0], visibility)
-        visibility_clear = y / y.max()
+    def __remove_noise(x: np.ndarray, ADC_fr: float):
+        N = 20
+        Fc1 = 2600
+        Fc2 = 6000
+        nyq = ADC_fr/2
+        # provide them to firwin
+        h = firwin2(numtaps=N, freq=[0, Fc1, Fc2, nyq], gain=[1.0, 1.0, 0.0, 0.0], nyq=nyq)
+        freq, response = freqz(h)
+        # 'x' is the time-series data you are filtering
+        y: np.ndarray = lfilter(h, 1.0, x)
 
-        return w / np.pi / 2, 10 * np.log10(abs(h)), visibility_clear
+        return nyq * freq / np.pi, np.abs(response), abs(y)
 
     @staticmethod
     def __get_split_num(total_time: float, speed: float):
@@ -173,7 +162,7 @@ class Signal:
         y = np.divide(visibility, visibility.max())
         beat_length = lambda_source / delta_n
         depol_len = (lambda_source ** 2) / (source_bandwith * delta_n)
-        h_par: np.ndarray = 10 * np.log10(np.square(y) / depol_len)
+        h_par: np.ndarray = np.square(y) / depol_len
         h_par_x: np.ndarray = visibility_x * 2 / delta_n
         return h_par_x, h_par, beat_length, depol_len
 

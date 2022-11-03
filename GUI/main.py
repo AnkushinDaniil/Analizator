@@ -26,11 +26,21 @@ from mainwindow import Ui_MainWindow
 pg.setConfigOptions(antialias=True)
 
 
+class CustomAxis(pg.AxisItem):
+    def __init__(self, orientation, parent, dep_len):
+        super().__init__(orientation, parent)
+        self.dep_len = dep_len
+
+    def tickStrings(self, values, scale, spacing):
+        return ['{0:.2e}'.format(np.log10(i * self.dep_len)) for i in values]
+
+
 class MainWindow(Ui_MainWindow):
     """Графический интерфейс главного окна"""
 
     def __init__(self):
         super().__init__()
+        self.__temp = None
         self.key = None
         self.signals = []
         self.filenames = None
@@ -128,7 +138,7 @@ class MainWindow(Ui_MainWindow):
                     'x_axis_name': 'Длина волокна',
                     'x_axis_unit': 'м',
                     'y_axis_name': 'h-параметр',
-                    'y_axis_unit': 'дБ'
+                    'y_axis_unit': 'дБ/м'
                 },
                 'Видность': {
                     'x_axis_name': 'Длина плеча интерферометра',
@@ -171,8 +181,23 @@ class MainWindow(Ui_MainWindow):
 
             for plt in [self.graph_widget, self.graph_widget_zoom]:  # Строим графики в обоих виджетах
                 plt.addLegend()
+                p1 = plt.plotItem
+                if self.key == 'h-параметр':
+                    p1.layout.removeItem(p1.getAxis('right'))
+                    caxis = CustomAxis(orientation='right', parent=p1, dep_len=self.signals[0].depol_len)
+                    caxis.setLabel('Cross Talk, dB')
+                    caxis.linkToView(p1.vb)
+                    if p1.axes['right']['item'] != caxis:
+                        self.__temp = p1.axes['right']['item']
+                        p1.axes['right']['item'] = caxis
+                    p1.layout.addItem(caxis, 2, 3)
+                    p1.showAxis('right')
+                elif self.__temp:
+                    p1.layout.removeItem(p1.getAxis('right'))
+                    p1.axes['right']['item'] = self.__temp
+
                 # В зависимости от типа графика задается линейная или логарифмическая шкала
-                plt.setLogMode(False, (False, True)[(self.key == 'Видность') | (self.key == 'Фильтрованная видность')])
+                plt.setLogMode(False, (False, True)[(self.key == 'Видность') | (self.key == 'Фильтрованная видность') | (self.key == 'h-параметр')])
                 # Задаем названия осей и единицы измерения
                 plt.setLabel('bottom', chart_dict['x_axis_name'], chart_dict['x_axis_unit'])
                 plt.setLabel('left', chart_dict['y_axis_name'], chart_dict['y_axis_unit'])
@@ -191,7 +216,8 @@ class MainWindow(Ui_MainWindow):
                 print(f'Построение графика "{self.key}": {name}')
                 for plt in [self.graph_widget, self.graph_widget_zoom]:  # Для каждого виджета
                     # Строим графики
-                    plt.plot(x, y, name=name, pen=pen)
+                    plt.plotItem.plot(x, y, name=name, pen=pen)
+
             for plt in [self.graph_widget, self.graph_widget_zoom]:
                 plt.enableAutoRange('y', True)  # Автоматический зум 1:1
                 plt.enableAutoRange('x', True)
