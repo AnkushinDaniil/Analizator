@@ -26,13 +26,14 @@ from mainwindow import Ui_MainWindow
 pg.setConfigOptions(antialias=True)
 
 
-class CustomAxis(pg.AxisItem):
-    def __init__(self, orientation, parent, dep_len):
-        super().__init__(orientation, parent)
-        self.dep_len = dep_len
-
-    def tickStrings(self, values, scale, spacing):
-        return ['{0:.2e}'.format(np.log10(i * self.dep_len)) for i in values]
+# class CustomAxis(pg.AxisItem):
+#     def __init__(self, orientation, parent, dep_len):
+#         super().__init__(orientation=orientation, parent=parent)
+#         self.dep_len = dep_len
+#
+#     def tickStrings(self, values, scale, spacing):
+#         print(values)
+#         return ['{0:g}'.format(np.log10(i * self.dep_len)) for i in values]
 
 
 class MainWindow(Ui_MainWindow):
@@ -138,7 +139,13 @@ class MainWindow(Ui_MainWindow):
                     'x_axis_name': 'Длина волокна',
                     'x_axis_unit': 'м',
                     'y_axis_name': 'h-параметр',
-                    'y_axis_unit': 'дБ/м'
+                    'y_axis_unit': '1/м'
+                },
+                'PER': {
+                    'x_axis_name': 'Длина волокна',
+                    'x_axis_unit': 'м',
+                    'y_axis_name': 'PER',
+                    'y_axis_unit': 'дБ'
                 },
                 'Видность': {
                     'x_axis_name': 'Длина плеча интерферометра',
@@ -181,21 +188,6 @@ class MainWindow(Ui_MainWindow):
 
             for plt in [self.graph_widget, self.graph_widget_zoom]:  # Строим графики в обоих виджетах
                 plt.addLegend()
-                p1 = plt.plotItem
-                if self.key == 'h-параметр':
-                    p1.layout.removeItem(p1.getAxis('right'))
-                    caxis = CustomAxis(orientation='right', parent=p1, dep_len=self.signals[0].depol_len)
-                    caxis.setLabel('Cross Talk, dB')
-                    caxis.linkToView(p1.vb)
-                    if p1.axes['right']['item'] != caxis:
-                        self.__temp = p1.axes['right']['item']
-                        p1.axes['right']['item'] = caxis
-                    p1.layout.addItem(caxis, 2, 3)
-                    p1.showAxis('right')
-                elif self.__temp:
-                    p1.layout.removeItem(p1.getAxis('right'))
-                    p1.axes['right']['item'] = self.__temp
-
                 # В зависимости от типа графика задается линейная или логарифмическая шкала
                 plt.setLogMode(False, (False, True)[(self.key == 'Видность') | (self.key == 'Фильтрованная видность') | (self.key == 'h-параметр')])
                 # Задаем названия осей и единицы измерения
@@ -210,7 +202,8 @@ class MainWindow(Ui_MainWindow):
                     'Интерференция': (signal.interference_x, signal.interference),
                     'Фильтрованная интерференция': (signal.interference_clear_x, signal.interference_clear),
                     'Фильтр интерференции': (signal.filter_i_x, signal.filter_i_y),
-                    'Фильтр видности': (signal.filter_v_x, signal.filter_v_y)
+                    'Фильтр видности': (signal.filter_v_x, signal.filter_v_y),
+                    'PER': (signal.per_x, signal.per)
                 }[self.key]
                 name, pen = signal.name, signal.pen  # Задаем имя и цвет графика
                 print(f'Построение графика "{self.key}": {name}')
@@ -224,7 +217,7 @@ class MainWindow(Ui_MainWindow):
             # Привязка зума между графиками
             lr = pg.LinearRegionItem()
             depol_len_x2 = 2 * self.signals[0].depol_len * (self.signals[0].delta_n, 1)[
-                self.key == 'h-параметр'
+                (self.key == 'h-параметр') | (self.key == 'PER')
             ]
             lr.setRegion((-depol_len_x2, depol_len_x2))
             self.graph_widget.addItem(lr)
@@ -240,6 +233,9 @@ class MainWindow(Ui_MainWindow):
             lr.sigRegionChanged.connect(updatePlot)
             self.graph_widget_zoom.sigXRangeChanged.connect(updateRegion)
             updatePlot()
+
+        self.beat_length.setText(f'{round(1000 * self.signals[0].beat_length, 3)}')
+        self.depolarization_length.setText(f'{1000 * round(self.signals[0].depol_len, 3)}')
 
     def clear_graph(self):
         for plt in [self.graph_widget, self.graph_widget_zoom]:

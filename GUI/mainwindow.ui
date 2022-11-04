@@ -186,25 +186,33 @@
           </property>
          </widget>
         </item>
-        <item row="7" column="1">
-         <widget class="QLCDNumber" name="beat_length"/>
-        </item>
         <item row="7" column="0">
          <widget class="QLabel" name="label_8">
           <property name="text">
-           <string>Длина биений, мм</string>
+           <string>Длина биений, мкм</string>
           </property>
          </widget>
         </item>
         <item row="8" column="0">
          <widget class="QLabel" name="label_9">
           <property name="text">
-           <string>Длина деполяризации, мм</string>
+           <string>Длина деполяризации, мкм</string>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="1">
+         <widget class="QLabel" name="beat_length">
+          <property name="text">
+           <string>0</string>
           </property>
          </widget>
         </item>
         <item row="8" column="1">
-         <widget class="QLCDNumber" name="depolarization_length"/>
+         <widget class="QLabel" name="depolarization_length">
+          <property name="text">
+           <string>0</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>
@@ -247,6 +255,11 @@
           <item>
            <property name="text">
             <string>h-параметр</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>PER</string>
            </property>
           </item>
           <item>
