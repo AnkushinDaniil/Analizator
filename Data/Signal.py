@@ -1,5 +1,8 @@
 import numpy as np
-from scipy.signal import cheby2, sosfilt, cheb2ord, freqz, remez, lfilter, firwin, firwin2
+import pandas as pd
+import filterpy.kalman as kf
+from scipy.signal import medfilt, correlate
+from scipy.signal.windows import gaussian
 
 
 class Signal:
@@ -72,16 +75,17 @@ class Signal:
         self.interference_x = np.arange(0, n, 1, dtype=float) * self.n_to_length
         self.interference_x = self.__set_0(x_axes=self.interference_x, y_axes=self.interference)
         self.filter_i_x, self.filter_i_y, self.interference_clear_x, self.interference_clear = \
-            self.__remove_noise(x=self.interference_x, y=self.interference, ADC_fr=self.ADC_fr)
+            self.__remove_noise(x=self.interference_x, y=self.interference, ADC_fr=self.ADC_fr, lambda_source=self.lambda_source)
         self.interference_clear_x = self.__set_0(x_axes=self.interference_clear_x, y_axes=self.interference_clear)
-        self.split_num = self.__get_split_num(total_time=self.total_time, speed=self.speed)
+        self.split_num = self.__get_split_num(total_time=self.total_time, speed=self.speed, lambda_source=self.lambda_source)
         self.visibility_x, self.visibility = self.__calculate_visibility(
             x=self.interference_clear_x, y=self.interference_clear, split_num=self.split_num
         )
         self.visibility_x = self.__set_0(x_axes=self.visibility_x, y_axes=self.visibility)
-        self.filter_v_x, self.filter_v_y, self.visibility_clear_x, self.visibility_clear = \
-            self.__remove_noise(x=self.visibility_x, y=self.visibility, ADC_fr=self.ADC_fr)
-        self.visibility_clear = self.visibility_clear / self.visibility_clear.max() * self.visibility.max()
+        # self.filter_v_x, self.filter_v_y, self.visibility_clear_x, self.visibility_clear = \
+        #     self.__remove_noise(x=self.visibility_x, y=self.visibility, ADC_fr=self.ADC_fr, lambda_source=self.lambda_source)
+        self.visibility_clear_x, self.visibility_clear = self.visibility_x, self.visibility
+        # self.visibility_clear = self.visibility_clear / self.visibility_clear.max() * self.visibility.max()
         self.visibility_clear_x = self.__set_0(x_axes=self.visibility_clear_x, y_axes=self.visibility_clear)
         self.h_par_x, self.h_par, self.beat_length, self.depol_len = \
             self.__calculate_h_param(visibility_x=self.visibility_clear_x, visibility=self.visibility_clear,
@@ -105,20 +109,41 @@ class Signal:
 
 
     @staticmethod
-    def __remove_noise(x: np.ndarray, y: np.ndarray, ADC_fr: float):
-        N = 20
-        Fc1 = 2600
-        Fc2 = 6000
-        nyq = ADC_fr/2
-        h = firwin2(numtaps=N, freq=[0, Fc1, Fc2, nyq], gain=[1.0, 1.0, 0.0, 0.0], nyq=nyq)
-        freq, response = freqz(h)
-        y_clear: np.ndarray = abs(lfilter(h, 1.0, y)[30:])
-        x_clear: np.ndarray = np.linspace(start=x.min(), stop=x.max(), num=y_clear.shape[0])
-        return nyq * freq / np.pi, np.abs(response), x_clear, y_clear
+    def __remove_noise(x: np.ndarray, y: np.ndarray, ADC_fr: float, lambda_source: float):
+        # N = 20
+        # Fc1 = 2600
+        # Fc2 = 6000
+        # nyq = ADC_fr/2
+        # h = firwin2(numtaps=N, freq=[0, Fc1, Fc2, nyq], gain=[1.0, 1.0, 0.0, 0.0], nyq=nyq)
+        # freq, response = freqz(h)
+        # y_clear: np.ndarray = abs(lfilter(h, 1.0, y)[30:])
+        # x_clear: np.ndarray = np.linspace(start=x.min(), stop=x.max(), num=y_clear.shape[0])
+        # return nyq * freq / np.pi, np.abs(response), x_clear, y_clear
+
+        n_iter = 1
+        n_per = 5
+
+        i_max = np.where(y == y.max())[0][0]
+        len2i = x.shape[0] // (x.max() - x.min())
+        win_half_size: int = round(lambda_source * len2i / 4 * n_per)
+        window: np.ndarray = y[i_max - win_half_size: i_max + win_half_size]
+        window = np.sin(np.linspace(0, 2 * np.pi * n_per, win_half_size * 2)) + 1
+        win_size = len(window)
+        g: np.ndarray = gaussian(win_size, std=win_size / 51 * 7)
+        # window = window * g
+        window_x = x[i_max - win_half_size: i_max + win_half_size]
+        for _ in range(n_iter):
+            y = correlate(y, window)
+        x_clear: np.ndarray = np.linspace(start=x.min(), stop=x.max(), num=y.shape[0])
+
+        return window_x, window, x_clear, y
+
+
+
 
     @staticmethod
-    def __get_split_num(total_time: float, speed: float):
-        split_num = total_time * speed / 0.000001
+    def __get_split_num(total_time: float, speed: float, lambda_source: float):
+        split_num = total_time * speed / lambda_source / 3
         return split_num
 
     @staticmethod
@@ -138,7 +163,7 @@ class Signal:
         depol_len = (lambda_source ** 2) / (source_bandwith * delta_n)
         h_par: np.ndarray = np.square(y) / depol_len
         h_par_x: np.ndarray = visibility_x * 2 / delta_n
-        return h_par_x, h_par, beat_length, depol_len
+        return h_par_x, h_par/10, beat_length, depol_len
 
     @staticmethod
     def __calculate_per(visibility: np.ndarray):

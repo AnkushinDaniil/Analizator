@@ -234,8 +234,8 @@ class MainWindow(Ui_MainWindow):
             self.graph_widget_zoom.sigXRangeChanged.connect(updateRegion)
             updatePlot()
 
-        self.beat_length.setText(f'{round(1000 * self.signals[0].beat_length, 3)}')
-        self.depolarization_length.setText(f'{1000 * round(self.signals[0].depol_len, 3)}')
+            self.beat_length.setText(f'{round(1000 * self.signals[0].beat_length, 3)}')
+            self.depolarization_length.setText(f'{1000 * round(self.signals[0].depol_len, 3)}')
 
     def clear_graph(self):
         for plt in [self.graph_widget, self.graph_widget_zoom]:
