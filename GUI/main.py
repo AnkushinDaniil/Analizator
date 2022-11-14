@@ -214,6 +214,7 @@ class MainWindow(Ui_MainWindow):
             for plt in [self.graph_widget, self.graph_widget_zoom]:
                 plt.enableAutoRange('y', True)  # Автоматический зум 1:1
                 plt.enableAutoRange('x', True)
+                plt.showGrid(x=True, y=True)
             # Привязка зума между графиками
             lr = pg.LinearRegionItem()
             depol_len_x2 = 2 * self.signals[0].depol_len * (self.signals[0].delta_n, 1)[

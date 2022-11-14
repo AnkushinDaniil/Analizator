@@ -162,7 +162,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Analizator"))
         self.label.setText(_translate("MainWindow", "Время ввода, с"))
-        self.total_time.setText(_translate("MainWindow", "30"))
+        self.total_time.setText(_translate("MainWindow", "260"))
         self.label_2.setText(_translate("MainWindow", "Скорость, мм/c"))
         self.speed.setText(_translate("MainWindow", "1"))
         self.label_3.setText(_translate("MainWindow", "Центральная длина волны источника, нм"))
@@ -172,7 +172,7 @@ class Ui_MainWindow(object):
         self.label_5.setText(_translate("MainWindow", "Разница эффективных показателей преломления волокна"))
         self.delta_n.setText(_translate("MainWindow", "0.0006086"))
         self.label_6.setText(_translate("MainWindow", "Частота АЦП, Гц"))
-        self.ADC_fr.setText(_translate("MainWindow", "500000"))
+        self.ADC_fr.setText(_translate("MainWindow", "250000"))
         self.label_7.setText(_translate("MainWindow", "Частота фазовой модуляции, Гц"))
         self.pm_fr.setText(_translate("MainWindow", "0"))
         self.label_8.setText(_translate("MainWindow", "Длина биений, мкм"))

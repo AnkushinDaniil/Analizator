@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import filterpy.kalman as kf
-from scipy.signal import medfilt, correlate
+from scipy.signal import medfilt, correlate, choose_conv_method
 from scipy.signal.windows import gaussian
 
 
@@ -129,11 +129,12 @@ class Signal:
         window: np.ndarray = y[i_max - win_half_size: i_max + win_half_size]
         window = np.sin(np.linspace(0, 2 * np.pi * n_per, win_half_size * 2)) + 1
         win_size = len(window)
-        g: np.ndarray = gaussian(win_size, std=win_size / 51 * 7)
+        # g: np.ndarray = gaussian(win_size, std=win_size / 51 * 7)
         # window = window * g
         window_x = x[i_max - win_half_size: i_max + win_half_size]
+        method = choose_conv_method(y, window, mode='valid')
         for _ in range(n_iter):
-            y = correlate(y, window)
+            y = correlate(y, window, mode='valid', method=method)
         x_clear: np.ndarray = np.linspace(start=x.min(), stop=x.max(), num=y.shape[0])
 
         return window_x, window, x_clear, y
