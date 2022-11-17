@@ -5,20 +5,19 @@
 # ООО "Анализ оптических систем"
 # email ankushin.daniil42@gmail.com
 # -----------------------------------------------------------
-import csv
 import os
 import pickle
 
 import numpy as np
 import pandas as pd
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
 import pyqtgraph as pg
 import json
 import colorcet as cc
-from scipy.io import savemat, loadmat
+from scipy.io import savemat
 
 from Data.Signal import Signal
 from mainwindow import Ui_MainWindow
@@ -41,6 +40,9 @@ class MainWindow(Ui_MainWindow):
 
     def __init__(self):
         super().__init__()
+        self.directory = None
+        self.extension = None
+        self.filename = None
         self.__temp = None
         self.key = None
         self.signals = []
@@ -74,12 +76,12 @@ class MainWindow(Ui_MainWindow):
         except ValueError:
             self.show_error()
 
-    def set_signals(self, filenames, total_time, speed, lambda_source, source_bandwith, delta_n, ADC_fr,
+    def set_signals(self, filenames, total_time, speed, lambda_source, source_bandwith, delta_n, adc_fr,
                     pm_fr, pens):
         """Создание объектов класса "сигнал" внутри объекта класса главного окна"""
         # Считывание параметров из элементов графического интерфейса и преобразование их в числа
         float_parameters = [self.str2float(i) for i in [total_time, speed, lambda_source, source_bandwith, delta_n,
-                                                        ADC_fr, pm_fr]]
+                                                        adc_fr, pm_fr]]
         if all([not (parameter is None) for parameter in float_parameters]):  # Если все параметры введены правильно
             # Создание объектов класса "сигнал"
             for i, pen in zip(filenames, pens):
@@ -91,7 +93,7 @@ class MainWindow(Ui_MainWindow):
                     lambda_source=lambda_source,
                     source_bandwith=source_bandwith,
                     delta_n=delta_n,
-                    ADC_fr=ADC_fr,
+                    adc_fr=adc_fr,
                     pm_fr=pm_fr,
                     name=i.split('/')[-1].split('.')[0],
                     pen=pen,
@@ -116,7 +118,7 @@ class MainWindow(Ui_MainWindow):
                 lambda_source=self.str2float(self.lambda_source.text()),
                 source_bandwith=self.str2float(self.source_bandwith.text()),
                 delta_n=self.str2float(self.delta_n.text()),
-                ADC_fr=self.str2float(self.ADC_fr.text()),
+                adc_fr=self.str2float(self.ADC_fr.text()),
                 pm_fr=self.str2float(self.pm_fr.text()),
                 pens=pens,
             )
@@ -133,7 +135,7 @@ class MainWindow(Ui_MainWindow):
             self.clear_graph()
             self.key = self.graphType.currentText()  # Создание ключа - название графика, который необходимо построить
             print(f'Выбранный график - {self.key}')
-            # В зависимости от ключа будет создан словарь, который будет задавать дальнейшие ключи для построения графиков
+        # В зависимости от ключа будет создан словарь, который будет задавать дальнейшие ключи для построения графиков
             chart_dict = {
                 'h-параметр': {
                     'x_axis_name': 'Длина волокна',
@@ -189,7 +191,9 @@ class MainWindow(Ui_MainWindow):
             for plt in [self.graph_widget, self.graph_widget_zoom]:  # Строим графики в обоих виджетах
                 plt.addLegend()
                 # В зависимости от типа графика задается линейная или логарифмическая шкала
-                plt.setLogMode(False, (False, True)[(self.key == 'Видность') | (self.key == 'Фильтрованная видность') | (self.key == 'h-параметр')])
+                plt.setLogMode(False, (False, True)[(self.key == 'Видность') |
+                                                    (self.key == 'Фильтрованная видность') |
+                                                    (self.key == 'h-параметр')])
                 # Задаем названия осей и единицы измерения
                 plt.setLabel('bottom', chart_dict['x_axis_name'], chart_dict['x_axis_unit'])
                 plt.setLabel('left', chart_dict['y_axis_name'], chart_dict['y_axis_unit'])
@@ -219,21 +223,21 @@ class MainWindow(Ui_MainWindow):
             lr = pg.LinearRegionItem()
             depol_len_x2 = 2 * self.signals[0].depol_len * (self.signals[0].delta_n, 1)[
                 (self.key == 'h-параметр') | (self.key == 'PER')
-            ]
+                ]
             lr.setRegion((-depol_len_x2, depol_len_x2))
             self.graph_widget.addItem(lr)
 
-            def updatePlot():
+            def update_plot():
                 """Настройка обновления графика при зуме"""
                 self.graph_widget_zoom.setXRange(*lr.getRegion(), padding=0)
 
-            def updateRegion():
+            def update_region():
                 """Настройка обновления региона при зуме"""
                 lr.setRegion(self.graph_widget_zoom.getViewBox().viewRange()[0])
 
-            lr.sigRegionChanged.connect(updatePlot)
-            self.graph_widget_zoom.sigXRangeChanged.connect(updateRegion)
-            updatePlot()
+            lr.sigRegionChanged.connect(update_plot)
+            self.graph_widget_zoom.sigXRangeChanged.connect(update_region)
+            update_plot()
 
             self.beat_length.setText(f'{round(1000 * self.signals[0].beat_length, 3)}')
             self.depolarization_length.setText(f'{1000 * round(self.signals[0].depol_len, 3)}')
@@ -262,42 +266,40 @@ class MainWindow(Ui_MainWindow):
         self.signals = []
         self.clear_graph()
 
-
-
     def save_file(self):
         """Экспорт файлов"""
         if self.signals:
-            directory = '_'.join([signal.name for signal in self.signals])
+            self.directory = '_'.join([signal.name for signal in self.signals])
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            filename, extension = QFileDialog.getSaveFileName(
-                parent=None, caption="Сохранить", directory=directory,
+            self.filename, self.extension = QFileDialog.getSaveFileName(
+                parent=None, caption="Сохранить", directory=self.directory,
                 filter="*.json;;*.txt;;*.pkl;;*.mat;;*.csv;;*.png", options=options
             )
 
         def sig2dict(sig_list: list):
-            sig_dict = dict()
+            s_d = dict()
             for sig in sig_list:
                 sig_name = sig.name
-                sig_dict[sig_name] = dict()
-                for key, value in sig.__dict__.items():
-                    if isinstance(value, np.ndarray):
-                        sig_dict[sig_name][key] = value.tolist()
+                s_d[sig_name] = dict()
+                for k, v in sig.__dict__.items():
+                    if isinstance(v, np.ndarray):
+                        s_d[sig_name][k] = v.tolist()
                     else:
-                        sig_dict[sig_name][key] = value
-            return sig_dict
+                        s_d[sig_name][k] = v
+            return s_d
 
-        if filename:
+        if self.filename:
             signal_dict = sig2dict(self.signals)
-            extension = extension.split('*')[-1]
-            if extension == '.csv':
-                if not os.path.exists(directory):
-                    os.mkdir(directory)
+            self.extension = self.extension.split('*')[-1]
+            if self.extension == '.csv':
+                if not os.path.exists(self.directory):
+                    os.mkdir(self.directory)
                 for name, signal in signal_dict.items():
                     df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in signal.items()]))
-                    path = os.path.join(directory, name)
-                    df.to_csv(f"{path}{extension}", index=False)
-            elif extension == '.mat':
+                    path = os.path.join(self.directory, name)
+                    df.to_csv(f"{path}{self.extension}", index=False)
+            elif self.extension == '.mat':
                 short_keys_signal_dict = dict()
                 for name, sig_dict in signal_dict.items():
                     short_name = name[:31]
@@ -306,16 +308,16 @@ class MainWindow(Ui_MainWindow):
                         short_key = key[:31]
                         if value:
                             short_keys_signal_dict[short_name][short_key] = value
-                savemat(f"{directory}{extension}", short_keys_signal_dict)
-            elif extension == '.pkl':
-                with open(f"{directory}{extension}", "wb") as file:
+                savemat(f"{self.directory}{self.extension}", short_keys_signal_dict)
+            elif self.extension == '.pkl':
+                with open(f"{self.directory}{self.extension}", "wb") as file:
                     pickle.dump(signal_dict, file)
             else:
-                with open(f"{directory}{extension}", "w") as file:
-                    if extension == '.json':
+                with open(f"{self.directory}{self.extension}", "w") as file:
+                    if self.extension == '.json':
                         signal_json = json.dumps(signal_dict)
                         file.write(signal_json)
-                    elif extension == '.txt':
+                    elif self.extension == '.txt':
                         file.write(str(signal_dict))
 
     def open_file(self):
