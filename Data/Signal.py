@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.fft import rfft, irfft
-from scipy.signal import correlate, choose_conv_method, medfilt
+from scipy.signal import correlate, choose_conv_method, medfilt, buttord, butter, freqz, sosfilt
 
 
 class Signal:
@@ -73,7 +73,8 @@ class Signal:
         self.interference_x = np.arange(0, n, 1, dtype=float) * self.n_to_length
         self.interference_x = self.__set_0(x_axes=self.interference_x, y_axes=self.interference)
         self.filter_i_x, self.filter_i_y, self.interference_clear_x, self.interference_clear = \
-            self.__remove_noise(x=self.interference_x, y=self.interference, lambda_source=self.lambda_source, adc_fr=self.ADC_fr)
+            self.__remove_noise(x=self.interference_x, y=self.interference, lambda_source=self.lambda_source,
+                                adc_fr=self.ADC_fr)
         self.interference_clear_x = self.__set_0(x_axes=self.interference_clear_x, y_axes=self.interference_clear)
         self.split_num = self.__get_split_num(total_time=self.total_time, speed=self.speed,
                                               lambda_source=self.lambda_source)
@@ -108,42 +109,16 @@ class Signal:
 
     @staticmethod
     def __remove_noise(x: np.ndarray, y: np.ndarray, lambda_source: float, adc_fr: float):
-        # N = 20
-        # Fc1 = 2600
-        # Fc2 = 6000
-        # nyq = adc_fr/2
-        # h = firwin2(numtaps=N, freq=[0, Fc1, Fc2, nyq], gain=[1.0, 1.0, 0.0, 0.0], nyq=nyq)
-        # freq, response = freqz(h)
-        # y_clear: np.ndarray = abs(lfilter(h, 1.0, y)[30:])
-        # x_clear: np.ndarray = np.linspace(start=x.min(), stop=x.max(), num=y_clear.shape[0])
-        # return nyq * freq / np.pi, np.abs(response), x_clear, y_clear
+        n, wn = buttord(wp=5200, ws=6000, gpass=1, gstop=200, analog=False, fs=adc_fr)
+        b, a = butter(N=n, Wn=wn, btype='low', fs=adc_fr)
+        w, h = freqz(b, a)
+        sos = butter(N=n, Wn=wn, btype='low', fs=adc_fr, output='sos')
+        y_clear = sosfilt(sos, y)
+        y_clear = y_clear[30:]
+        x = x[30:]
+        x_clear: np.ndarray = np.linspace(start=x.min(), stop=x.max(), num=y_clear.shape[0])
 
-        n_iter = 1
-        n_per = 5
-
-        i_max = np.where(y == y.max())[0][0]
-        len2i = x.shape[0] // (x.max() - x.min())
-        win_half_size: int = round(lambda_source * len2i / 4 * n_per)
-        window: np.ndarray = y[i_max - win_half_size: i_max + win_half_size]
-        # for _ in range(10):
-        #     y = medfilt(y)
-        y_rfft = rfft(y)
-        fr_filt = np.where(y_rfft > np.quantile(y_rfft, 0.9999))[0].max()
-        print(fr_filt)
-        y_rfft[fr_filt:] = 0
-        y = irfft(y_rfft)
-        # window = np.sin(np.linspace(0, 2 * np.pi * n_per, win_half_size * 2)) + 1
-        # win_size = len(window)
-        # g: np.ndarray = gaussian(win_size, std=win_size / 51 * 7)
-        # window = window * g
-
-        window_x = x[i_max - win_half_size: i_max + win_half_size]
-        # method = choose_conv_method(y, window, mode='valid')
-        # for _ in range(n_iter):
-        #     y = correlate(y, window, mode='valid', method=method)
-        x_clear: np.ndarray = np.linspace(start=x.min(), stop=x.max(), num=y.shape[0])
-
-        return window_x, window, x_clear, y
+        return abs(w), h, x_clear, y_clear
 
     @staticmethod
     def __get_split_num(total_time: float, speed: float, lambda_source: float):
